@@ -2,18 +2,25 @@ from ubuntu
 
 RUN apt-get -y update \
 		&& apt-get -y upgrade \
-		&& apt-get -y install haskell-platform libqt4-dev libgraphviz-dev \ 
-			curl tar make g++
+		&& apt-get -y install haskell-platform libqt4-dev libgraphviz-dev \
+			curl tar make g++ subversion
 
-RUN curl -L http://www.gecode.org/download/gecode-5.1.0.tar.gz | tar xz \
-		&& cd gecode-5.1.0 \
+WORKDIR /root
+
+# Install Gecode
+RUN svn --non-interactive --no-auth-cache --trust-server-cert \
+				--username anonymous --password anonymous@kth.se \
+				checkout -r16327 https://svn.gecode.org/svn/gecode/trunk \
+		&& cd trunk \
 		&& ./configure --prefix=/usr --disable-examples \
 		&& make \
 		&& make install
 
-COPY . /root
+RUN mkdir unison
+WORKDIR /root/unison
+COPY . .
 
-WORKDIR /root
+# Install unison
 RUN cabal update \
 		&& make build \
 		&& make install
