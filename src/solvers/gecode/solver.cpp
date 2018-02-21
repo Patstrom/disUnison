@@ -871,7 +871,9 @@ int main(int argc, char* argv[]) {
   Support::Timer t_solver;
   t_solver.start();
 
-  if (options.decomposition()) {
+
+  // This actually solves it
+  if (options.decomposition() && false) {
 
     unsigned long int iteration = 0;
 
@@ -1166,6 +1168,53 @@ int main(int argc, char* argv[]) {
       }
     }
   }
+
+  // Monolothic solver
+  GlobalModel * m = (GlobalModel*) base->clone();
+  m->post_complete_branchers(0);
+
+#ifdef GRAPHICS
+  if (base->options->gist_global()) Gist::dfs(m, *go);
+#endif
+
+  //unsigned int scale = base->input->O.size() / 10;
+  //Search::Cutoff* c = Search::Cutoff::luby(scale);
+  //if (base->options->verbose())
+  //  cerr << monolithic() << "Luby scale: " << scale << endl;
+  Search::Options ro;
+  //ro.cutoff = c;
+  //ro.nogoods_limit = 128;
+
+  unsigned int FACTOR = 10;
+  double limit =
+    base->options->monolithic_budget() * base->input->O.size() * FACTOR;
+  Search::Stop * monolithicStop = new_stop(limit, base->options);
+  if (base->options->verbose())
+    cerr << monolithic() << "time limit: " << limit << endl;
+
+  //SEBs sebs;
+  //for (unsigned int t = 0; t < threads; t++) sebs << rbs<GlobalModel, BAB>(ro);
+  ro.stop = monolithicStop;
+  //RBS<GlobalModel, DFS> e(m, ro);
+  DFS<GlobalModel> e(m, ro);
+
+  bool found_solution = false;
+  while (GlobalModel* nextm = e.next()) {
+    found_solution = true;
+    cout << nextm->solution_to_json() << endl;
+    GlobalModel * oldm = m;
+    m = nextm;
+    delete oldm;
+  }
+
+  SolverResult r;
+  if (monolithicStop->stop(e.statistics(), ro))
+    r = found_solution ? SOME_SOLUTION : LIMIT;
+  else
+    r = found_solution ? OPTIMAL_SOLUTION : UNSATISFIABLE;
+
+  delete monolithicStop;
+  // monolithic solver stop
 
   execution_time = t.stop();
 
