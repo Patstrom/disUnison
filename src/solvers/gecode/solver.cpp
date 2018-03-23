@@ -41,6 +41,9 @@
 #include <string>
 #include <cmath>
 
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+
 #ifdef GRAPHICS
 #include <QtGui>
 #include <QtScript/QScriptEngine>
@@ -1198,20 +1201,29 @@ int main(int argc, char* argv[]) {
   //RBS<GlobalModel, DFS> e(m, ro);
   DFS<GlobalModel> e(m, ro);
 
-  bool found_solution = false;
-  while (GlobalModel* nextm = e.next()) {
-    found_solution = true;
-    cout << nextm->solution_to_json() << endl;
-    GlobalModel * oldm = m;
-    m = nextm;
-    delete oldm;
+  fs::path dir = fs::current_path();
+  cerr << m->options->output_file() << endl;
+  dir /= m->options->output_file(); // Use output file as name for output directory
+  try {
+    fs::create_directory(dir);
+  } catch (const exception &e) {
+    cerr << e.what();
+    exit(EXIT_FAILURE);
   }
 
-  SolverResult r;
-  if (monolithicStop->stop(e.statistics(), ro))
-    r = found_solution ? SOME_SOLUTION : LIMIT;
-  else
-    r = found_solution ? OPTIMAL_SOLUTION : UNSATISFIABLE;
+  std::ofstream a_dot_out;
+  for (int i = 0; GlobalModel* nextm = e.next(); ++i) {
+    string filename = dir.string() + "/" + std::to_string(i);
+    cerr << filename << endl;
+    a_dot_out.open( filename );
+    a_dot_out << "cost: " << nextm->cost() << " ";
+    a_dot_out << nextm->solution_to_json() << endl;
+    GlobalModel* oldm = m;
+    m = nextm;
+    delete oldm;
+    a_dot_out.close();
+    break;
+  }
 
   delete monolithicStop;
   // monolithic solver stop
