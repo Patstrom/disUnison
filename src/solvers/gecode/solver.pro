@@ -96,6 +96,8 @@ CONFIG(graphics) {
 LIBS += -lgecodesearch -lgecodeminimodel -lgecodeset -lgecodefloat -lgecodeint \
         -lgecodekernel -lgecodesupport
 
+LIBS += -lstdc++fs
+
 TARGET = gecode-solver
 CONFIG -= qt
 CONFIG += warn_on
