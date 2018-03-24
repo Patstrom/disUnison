@@ -17,10 +17,8 @@ RUN cd /root \
 
 # Install Gecode
 RUN cd /root \
-    && svn --non-interactive --no-auth-cache --trust-server-cert-failures=expired,unknown-ca,other \
-				--username anonymous --password anonymous@kth.se \
-				checkout -r16327 https://svn.gecode.org/svn/gecode/trunk \
-		&& cd trunk \
+    && git clone -b release-6.0.0 --single-branch https://github.com/Gecode/gecode.git \
+		&& cd gecode \
 		&& ./configure --prefix=/usr --disable-examples \
 		&& make \
 		&& make install
