@@ -1225,7 +1225,7 @@ int main(int argc, char* argv[]) {
     for(int i = 0; i < m->v_c.size(); ++i) {
         try {
 	    int val = oldm->v_c[i].val();
-            m->constraint(m->v_c[i] != val);
+            if (val >= 0) m->constraint(m->v_c[i] != val);
         }
 	catch(const Int::ValOfUnassignedVar&) {}
     }
