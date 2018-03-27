@@ -1202,7 +1202,6 @@ int main(int argc, char* argv[]) {
   DFS<GlobalModel> e(m, ro);
 
   fs::path dir = fs::current_path();
-  cerr << m->options->output_file() << endl;
   dir /= m->options->output_file(); // Use output file as name for output directory
   try {
     fs::create_directory(dir);
@@ -1213,16 +1212,25 @@ int main(int argc, char* argv[]) {
 
   std::ofstream a_dot_out;
   for (int i = 0; GlobalModel* nextm = e.next(); ++i) {
+    // Write the solution to file
     string filename = dir.string() + "/" + std::to_string(i);
-    cerr << filename << endl;
     a_dot_out.open( filename );
     a_dot_out << "cost: " << nextm->cost() << " ";
     a_dot_out << nextm->solution_to_json() << endl;
+    a_dot_out.close();
+    
     GlobalModel* oldm = m;
     m = nextm;
+
+    for(int i = 0; i < m->v_c.size(); ++i) {
+        try {
+	    int val = oldm->v_c[i].val();
+            m->constraint(m->v_c[i] != val);
+        }
+	catch(const Int::ValOfUnassignedVar&) {}
+    }
+
     delete oldm;
-    a_dot_out.close();
-    break;
   }
 
   delete monolithicStop;
