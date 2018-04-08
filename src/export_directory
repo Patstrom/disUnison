@@ -1,0 +1,11 @@
+#!/bin/bash
+
+alt_file=$1
+directory=$2
+
+mkdir ${directory}exported
+
+for FILE in $directory*
+do
+    uni export $alt_file -o ${directory}exported/$(basename ${FILE}).unison.mir --solfile=$FILE
+done
