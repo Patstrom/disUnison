@@ -1211,25 +1211,32 @@ int main(int argc, char* argv[]) {
   }
 
   std::ofstream a_dot_out;
+
+  t_solver.start();
+
   for (int i = 0; GlobalModel* nextm = e.next(); ++i) {
+    Support::Timer t_it;
+    t_it.start();
+
+    ResultData rd(nextm, false, 0, i, presolver_time, presolving_time, t_solver.stop(), t_it.stop()); 
+
     // Write the solution to file
     string filename = dir.string() + "/" + std::to_string(i);
     a_dot_out.open( filename );
-    a_dot_out << "cost: " << nextm->cost() << " ";
-    a_dot_out << nextm->solution_to_json() << endl;
+    a_dot_out << produce_json(rd, gd, nextm->input->N, 0) << endl;
     a_dot_out.close();
     
     GlobalModel* oldm = m;
     m = nextm;
-
-    for(int i = 0; i < m->v_c.size(); ++i) {
-        try {
-	    int val = oldm->v_c[i].val();
-            if (val >= 0) m->constraint(m->v_c[i] != val);
-        }
-	catch(const Int::ValOfUnassignedVar&) {}
-    }
-
+    
+    // Apply a diversification strategy
+    //for(int i = 0; i < m->v_c.size(); ++i) {
+    //    try {
+    //        int val = oldm->v_c[i].val();
+    //        if (val >= 0) m->constraint(m->v_c[i] != val);
+    //    }
+    //    catch(const Int::ValOfUnassignedVar&) {}
+    //}
     delete oldm;
   }
 
