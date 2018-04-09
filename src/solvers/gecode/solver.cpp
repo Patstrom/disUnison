@@ -44,6 +44,8 @@
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
 
+#include "diversity/diversity.hpp"
+
 #ifdef GRAPHICS
 #include <QtGui>
 #include <QtScript/QScriptEngine>
@@ -1180,27 +1182,19 @@ int main(int argc, char* argv[]) {
   if (base->options->gist_global()) Gist::dfs(m, *go);
 #endif
 
-  //unsigned int scale = base->input->O.size() / 10;
-  //Search::Cutoff* c = Search::Cutoff::luby(scale);
-  //if (base->options->verbose())
-  //  cerr << monolithic() << "Luby scale: " << scale << endl;
   Search::Options ro;
-  //ro.cutoff = c;
-  //ro.nogoods_limit = 128;
 
   unsigned int FACTOR = 10;
-  double limit =
-    base->options->monolithic_budget() * base->input->O.size() * FACTOR;
+  double limit = base->options->monolithic_budget() * base->input->O.size() * FACTOR;
   Search::Stop * monolithicStop = new_stop(limit, base->options);
   if (base->options->verbose())
     cerr << monolithic() << "time limit: " << limit << endl;
-
-  //SEBs sebs;
-  //for (unsigned int t = 0; t < threads; t++) sebs << rbs<GlobalModel, BAB>(ro);
   ro.stop = monolithicStop;
-  //RBS<GlobalModel, DFS> e(m, ro);
+
+  // Create the engine
   DFS<GlobalModel> e(m, ro);
 
+  // Create the output directory
   fs::path dir = fs::current_path();
   dir /= m->options->output_file(); // Use output file as name for output directory
   try {
@@ -1210,10 +1204,11 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
 
+  // Find the diversification strategies
+  auto strategies = Diversity::strategies(m->options->diversify());
+  
   std::ofstream a_dot_out;
-
   t_solver.start();
-
   for (int i = 0; GlobalModel* nextm = e.next(); ++i) {
     Support::Timer t_it;
     t_it.start();
@@ -1229,14 +1224,8 @@ int main(int argc, char* argv[]) {
     GlobalModel* oldm = m;
     m = nextm;
     
-    // Apply a diversification strategy
-    //for(int i = 0; i < m->v_c.size(); ++i) {
-    //    try {
-    //        int val = oldm->v_c[i].val();
-    //        if (val >= 0) m->constraint(m->v_c[i] != val);
-    //    }
-    //    catch(const Int::ValOfUnassignedVar&) {}
-    //}
+    for(auto f: strategies) f(m, oldm);
+
     delete oldm;
   }
 
