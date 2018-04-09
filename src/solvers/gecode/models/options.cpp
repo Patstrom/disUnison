@@ -44,6 +44,9 @@ ModelOptions::ModelOptions(void)
     _verbose("verbose", "verbose mode", true),
     _emit_improvement("emit-improvement", "emit estimated improvement", false),
     _lower_bound_file("l", "lower bound file", ""),
+
+    _diversify("diversify", "The strategies to apply during the diversification process (as a comma-seperated list)", ""),
+
 #ifdef GRAPHICS
     _gist_global("gist-global", "run Gist for global problems", false),
     _gist_block("gist-block", "block on which to run Gist", -1),
@@ -119,6 +122,9 @@ ModelOptions::ModelOptions(void)
   add(_verbose);
   add(_emit_improvement);
   add(_lower_bound_file);
+
+  add(_diversify);
+
 #ifdef GRAPHICS
   add(_gist_global);
   add(_gist_block);
