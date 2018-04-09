@@ -5,7 +5,14 @@ directory=$2
 
 mkdir ${directory}exported
 
+i=0
 for FILE in $directory*
 do
-    uni export $alt_file -o ${directory}exported/$(basename ${FILE}).unison.mir --solfile=$FILE
+   uni export $alt_file -o ${directory}exported/$(basename ${FILE}).unison.mir --solfile=$FILE
+   ((i++))
+
+   if [ $i -ge 256 ]; then
+       i=0
+       wait
+   fi
 done
