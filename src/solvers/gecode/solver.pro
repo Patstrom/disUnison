@@ -50,7 +50,8 @@ HEADERS += common/definitions.hpp \
            branchers/routingbrancher.hpp \
            procedures/commonprocedures.hpp \
            procedures/globalprocedures.hpp \
-           procedures/localprocedures.hpp
+           procedures/localprocedures.hpp \
+           diversity/diversity.hpp
 
 
 SOURCES += third-party/jsoncpp/json_reader.cpp \
@@ -76,6 +77,7 @@ SOURCES += third-party/jsoncpp/json_reader.cpp \
            procedures/commonprocedures.cpp \
            procedures/globalprocedures.cpp \
            procedures/localprocedures.cpp \
+           diversity/diversity.cpp \
            solver.cpp
 
 ENV_CXX = $$(CXX)
