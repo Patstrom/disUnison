@@ -39,6 +39,11 @@ std::vector<diversity_function> Diversity::strategies(std::string csl) {
 
 void Diversity::registers(GlobalModel* m, GlobalModel* oldm) {
     // Get the register permutation in oldm
+    Gecode::IntArgs oldm_register;
+    for (int i = 0; i < oldm->v_r.size(); ++i) {
+        oldm_registers << oldm->v_r[i].val();
+    }
+    m->constraint(m->v_r != oldm_register);
 }
 
 
