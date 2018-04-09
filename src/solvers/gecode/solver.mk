@@ -37,6 +37,8 @@ SOLVERBRANCHERSDIR := $(SOLVERDIR)/branchers
 SOLVERPROCEDURESDIR := $(SOLVERDIR)/procedures
 SOLVERINSPECTORSDIR := $(SOLVERDIR)/inspectors
 
+SOLVERDIVERSITYDIR := $(SOLVERDIR)/diversity
+
 SOLVERMAIN = $(SOLVERDIR)/solver
 
 SOLVERCOMMON := definitions util jsonutil
@@ -53,10 +55,13 @@ dataflowinspector alignmentinspector alignmentpartitioninspector		\
 operandallocationinspector congruenceallocationinspector precedenceinspector	\
 precedencematrixinspector usersinspector operandlatencyinspector
 
+SOLVERDIVERSITY := diversity
+
 SOLVERCLASSES := $(addprefix $(SOLVERCOMMONDIR)/, $(SOLVERCOMMON)) $(addprefix	\
 $(SOLVERMODELSDIR)/, $(SOLVERMODELS)) $(addprefix $(SOLVERBRANCHERSDIR)/,	\
 $(SOLVERBRANCHERS)) $(addprefix $(SOLVERPROCEDURESDIR)/, $(SOLVERPROCEDURES))	\
-$(addprefix $(SOLVERINSPECTORSDIR)/, $(SOLVERINSPECTORS))
+$(addprefix $(SOLVERINSPECTORSDIR)/, $(SOLVERINSPECTORS)) \
+$(addprefix $(SOLVERDIVERSITYDIR)/, $(SOLVERDIVERSITY))
 
 SOLVERCPPSRC := $(addsuffix .cpp, $(SOLVERMAIN) $(SOLVERCLASSES))
 SOLVERHPPSRC := $(addsuffix .hpp, $(SOLVERCLASSES))
