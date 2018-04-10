@@ -1192,7 +1192,7 @@ int main(int argc, char* argv[]) {
   ro.stop = monolithicStop;
 
   // Create the engine
-  DFS<GlobalModel> e(m, ro);
+  BAB<GlobalModel> e(m, ro);
 
   // Create the output directory
   fs::path dir = fs::current_path();
