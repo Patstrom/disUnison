@@ -197,6 +197,18 @@ public:
   void apply_solution_and_deactivate(GlobalModel * gs,
                                      vector<activation_class> & acs);
 
+  // A futile attempt at something
+  virtual void constrain(const Space& _b) {
+    const GlobalModel& b = static_cast<const GlobalModel&>(_b);
+
+    BoolVarArgs equal_old(*this, v_r.size(), 0, 1);
+    for(int i = 0; i < v_r.size(); i++) {
+        rel(*this, v_r[i], IRT_EQ, b.v_r[i].val(), equal_old[i]);
+    }
+
+    rel(*this, BOT_AND, equal_old, 0);
+
+  }
 };
 
 #endif
