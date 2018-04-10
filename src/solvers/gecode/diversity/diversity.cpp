@@ -37,23 +37,29 @@ std::vector<diversity_function> Diversity::strategies(std::string csl) {
    return functions;
 }
 
-void Diversity::registers(GlobalModel* m, GlobalModel* oldm) {
-    // Get the register permutation in oldm
-    Gecode::IntArgs oldm_register;
-    for (int i = 0; i < oldm->v_r.size(); ++i) {
-        oldm_registers << oldm->v_r[i].val();
+void Diversity::registers(const Space& _b) {
+// Works when copied into globalmodel.hpp::constrain
+    const GlobalModel& b = static_cast<const GlobalModel&>(_b);
+
+    BoolVarArgs equal_old(*this, v_r.size(), 0, 1);
+    for(int i = 0; i < v_r.size(); i++) {
+        rel(*this, v_r[i], IRT_EQ, b.v_r[i].val(), equal_old[i]); // equal_old[i] is true if v_r[i] equal b.v_r[i]
     }
-    m->constraint(m->v_r != oldm_register);
+
+    rel(*this, BOT_AND, equal_old, 0); // ^ across equal_old equal 0 (i.e not all equal_old[i] is true)
+  }
 }
 
 
-void Diversity::schedule(GlobalModel* m, GlobalModel* oldm) {
-//   // Build the list of values that further solutions cannot be.
-//   int oldm_v_c[oldm->v_c.size()];
-//   for(int i = 0; i < oldm->v_c.size(); ++i) {
-//       // if operation is active we should add it to the list
-//       if (oldm->v_a[i].val()) {
-//           oldm_v_c[i] = oldm->v_c[i].val();
-//       }
-//   }
+void Diversity::schedule(const Space& _b) {
+// WIP
+    const GlobalModel& b = static_cast<const GlobalModel&>(_b);
+
+    BoolVarArgs equal_old(*this, v_c.size(), 0, 1);
+    for(int i = 0; i < v_c.size(); i++) {
+        rel(*this, v_c[i], IRT_EQ, b.v_c[i].val(), equal_old[i]);
+    }
+
+    rel(*this, BOT_AND, equal_old, 0);
+  }
 }
