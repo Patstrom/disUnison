@@ -889,3 +889,11 @@ apply_solution_and_deactivate(GlobalModel * gs,
       constraint(a(o) == gs->a(o));
   }
 }
+
+// A futile attempt at something
+void
+GlobalModel::constrain(const Space& _b) {
+    const GlobalModel& b = static_cast<const GlobalModel&>(_b);
+
+    for(auto f: strategies) f(*this, b);
+}
