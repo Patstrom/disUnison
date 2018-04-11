@@ -7,7 +7,9 @@
 #include <string>
 #include <sstream>
 
-typedef std::function<void(GlobalModel*, GlobalModel*)> diversity_function;
+class GlobalModel; // forward-declare the globalmodel class
+
+typedef std::function<void(GlobalModel& home, const GlobalModel& b)> diversity_function;
 
 namespace Diversity {
     // General functions
@@ -15,8 +17,8 @@ namespace Diversity {
     std::vector<diversity_function> strategies(std::string csl);
     
     // The functions that implements the strategies (posts constraints)
-    void registers(GlobalModel* m, GlobalModel* oldm);
-    void schedule(GlobalModel* m, GlobalModel* oldm);
+    void registers(GlobalModel& home, const GlobalModel& b);
+    void schedule(GlobalModel& home, const GlobalModel& _b);
 }
 
 #endif
