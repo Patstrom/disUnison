@@ -1191,6 +1191,9 @@ int main(int argc, char* argv[]) {
     cerr << monolithic() << "time limit: " << limit << endl;
   ro.stop = monolithicStop;
 
+  // Find the diversification strategies
+  m->parse_strategies();
+
   // Create the engine
   BAB<GlobalModel> e(m, ro);
 
@@ -1204,8 +1207,6 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
 
-  // Find the diversification strategies
-  auto strategies = Diversity::strategies(m->options->diversify());
   
   std::ofstream a_dot_out;
   t_solver.start();
@@ -1220,11 +1221,9 @@ int main(int argc, char* argv[]) {
     a_dot_out.open( filename );
     a_dot_out << produce_json(rd, gd, nextm->input->N, 0) << endl;
     a_dot_out.close();
-    
+
     GlobalModel* oldm = m;
     m = nextm;
-    
-    for(auto f: strategies) f(m, oldm);
 
     delete oldm;
   }
