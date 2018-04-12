@@ -895,5 +895,57 @@ void
 GlobalModel::constrain(const Space& _b) {
     const GlobalModel& b = static_cast<const GlobalModel&>(_b);
 
-    for(auto f: strategies) f(*this, b);
+    string diversity_strategy = options->diversify();
+    if (diversity_strategy == "registers") {
+        BoolVarArgs equal_old(*this, v_r.size(), 0, 1);
+        for(int i = 0; i < v_r.size(); i++) {
+            rel(*this, v_r[i], IRT_EQ, b.v_r[i].val(), equal_old[i]);
+        }
+        rel(*this, BOT_AND, equal_old, 0);
+    } else if (diversity_strategy == "difference") {
+        // Do nothing
+    } else if (diversity_strategy == "schedule") {
+        // If it has the same active operations: same_active = 1
+        BoolVarArgs all_active(*this, b.v_a.size(), 0, 1);
+        for(int i = 0; i < b.v_a.size(); i++) {
+            rel(*this, v_a[i], IRT_EQ, b.v_a[i].val(), all_active[i]);
+        }
+        BoolVar same_active(*this, 0, 1);
+        rel(*this, BOT_AND, all_active, same_active);
+
+        //Get the indices of the active operations
+	vector<int> active_operations_indices;
+	for(int i = 0; i < b.v_a.size(); i++) {
+		if(b.v_a[i].val() == 1) {
+			active_operations_indices.push_back(i);
+		}
+	}
+
+	// If the active operations are issued at the same cycle as in previous solution: same_cycles = 1
+	BoolVarArgs all_cycles(*this, active_operations_indices.size(), 0, 1);
+        int i = 0;
+	for(int idx: active_operations_indices) {
+            // If the operations are issued at the same cycle
+	    rel(*this, v_c[idx], IRT_EQ, b.v_c[idx].val(), all_cycles[i]);
+            i++;
+        }
+	BoolVar same_cycles(*this, 0, 1);
+	rel(*this, BOT_AND, all_cycles, same_cycles);
+
+	// If the operations are implemented by the same instruction as in previous solutions: same_instructions = 1
+        BoolVarArgs all_instructions(*this, b.v_i.size(), 0, 1);
+	for(int i = 0; i < b.v_i.size(); i++) {
+            rel(*this, v_i[i], IRT_EQ, b.v_i[i].val(), all_instructions[i]);
+	}
+	BoolVar same_instructions(*this, 0, 1);
+	rel(*this, BOT_AND, all_instructions, same_instructions);
+
+
+	// If the operations are issued at the same cycle and implemented by the same instrucion: both = 1
+	BoolVar both(*this, 0, 1);
+	rel(*this, same_cycles, BOT_AND, same_instructions, both);
+
+	// Make sure that the next solution does not have the same active operations AND they are issued at the same cycle and implemented with the same instruction
+	rel(*this, same_active, BOT_AND, both, 0);
+    }
 }
