@@ -1184,7 +1184,7 @@ int main(int argc, char* argv[]) {
 
   Search::Options ro;
 
-  unsigned int FACTOR = 10;
+  unsigned int FACTOR = 50;
   double limit = base->options->monolithic_budget() * base->input->O.size() * FACTOR;
   Search::Stop * monolithicStop = new_stop(limit, base->options);
   if (base->options->verbose())
