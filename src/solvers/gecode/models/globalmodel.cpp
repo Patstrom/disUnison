@@ -920,6 +920,8 @@ GlobalModel::constrain(const Space& _b) {
 			active_operations_indices.push_back(i);
 		}
 	}
+	BoolVar same_amount_of_active(*this, 0, 1);
+	rel(*this, ( sum(v_a) == active_operations_indices.size() ) >> same_amount_of_active);
 
 	// If the active operations are issued at the same cycle as in previous solution: same_cycles = 1
 	BoolVarArgs all_cycles(*this, active_operations_indices.size(), 0, 1);
@@ -946,6 +948,6 @@ GlobalModel::constrain(const Space& _b) {
 	rel(*this, same_cycles, BOT_AND, same_instructions, both);
 
 	// Make sure that the next solution does not have the same active operations AND they are issued at the same cycle and implemented with the same instruction
-	rel(*this, same_active, BOT_AND, both, 0);
+	rel(*this, (same_amount_of_active && same_active) >> !both );
     }
 }
