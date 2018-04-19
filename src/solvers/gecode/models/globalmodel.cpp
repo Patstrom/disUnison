@@ -897,6 +897,8 @@ GlobalModel::constrain(const Space& _b) {
 
     string diversity_strategy = options->diversify();
     if (diversity_strategy == "registers") {
+	// Change this up. It should check that if it has the same active operations (re-use code from schedule) then the temporaries should be
+	// connected differently or the registers should be allocated differently.
         BoolVarArgs equal_old(*this, v_r.size(), 0, 1);
         for(int i = 0; i < v_r.size(); i++) {
             rel(*this, v_r[i], IRT_EQ, b.v_r[i].val(), equal_old[i]);
