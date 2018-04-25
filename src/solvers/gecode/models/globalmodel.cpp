@@ -897,13 +897,22 @@ GlobalModel::constrain(const Space& _b) {
 
     string diversity_strategy = options->diversify();
     if (diversity_strategy == "registers") {
-	// Change this up. It should check that if it has the same active operations (re-use code from schedule) then the temporaries should be
-	// connected differently or the registers should be allocated differently.
-        BoolVarArgs equal_old(*this, v_r.size(), 0, 1);
-        for(int i = 0; i < v_r.size(); i++) {
-            rel(*this, v_r[i], IRT_EQ, b.v_r[i].val(), equal_old[i]);
-        }
-        rel(*this, BOT_AND, equal_old, 0);
+	BoolVarArgs all_connected(*this, b.v_x.size(), 0, 1);
+	for(int i = 0; i < b.v_x.size(); i++) {
+	    rel(*this, v_x[i], IRT_EQ, b.v_x[i].val(), all_connected[i]);
+	}
+	BoolVar same_connected(*this, 0, 1);
+	rel(*this, BOT_AND, all_connected, same_connected);
+	
+	BoolVarArgs all_registers(*this, b.v_ry.size(), 0, 1);
+	for(int i = 0; i < b.v_ry.size(); i++) {
+	    rel(*this, v_ry[i], IRT_EQ, b.v_ry[i].val(), all_registers[i]);
+	}
+	BoolVar same_registers(*this, 0, 1);
+	rel(*this, BOT_AND, all_registers, same_registers);
+
+	rel(*this, same_connected, BOT_AND, same_registers, 0);
+
     } else if (diversity_strategy == "difference") {
         // Do nothing
     } else if (diversity_strategy == "schedule") {
