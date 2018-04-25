@@ -897,6 +897,7 @@ GlobalModel::constrain(const Space& _b) {
 
     string diversity_strategy = options->diversify();
     if (diversity_strategy == "registers") {
+	// If it has the same connected temporaries as the previous solution => same_connected = 1
 	BoolVarArgs all_connected(*this, b.v_x.size(), 0, 1);
 	for(int i = 0; i < b.v_x.size(); i++) {
 	    rel(*this, v_x[i], IRT_EQ, b.v_x[i].val(), all_connected[i]);
@@ -904,6 +905,7 @@ GlobalModel::constrain(const Space& _b) {
 	BoolVar same_connected(*this, 0, 1);
 	rel(*this, BOT_AND, all_connected, same_connected);
 	
+	// If all the operands are connected to the same registers => same_registers = 1
 	BoolVarArgs all_registers(*this, b.v_ry.size(), 0, 1);
 	for(int i = 0; i < b.v_ry.size(); i++) {
 	    rel(*this, v_ry[i], IRT_EQ, b.v_ry[i].val(), all_registers[i]);
@@ -911,6 +913,7 @@ GlobalModel::constrain(const Space& _b) {
 	BoolVar same_registers(*this, 0, 1);
 	rel(*this, BOT_AND, all_registers, same_registers);
 
+	// Make sure that the new solutions doesn't have the same connected operands AND the operands are allocated to the same registers
 	rel(*this, same_connected, BOT_AND, same_registers, 0);
 
     } else if (diversity_strategy == "difference") {
