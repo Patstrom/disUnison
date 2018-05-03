@@ -173,6 +173,7 @@ public:
 
   void post_branchers(void);
   void post_callee_saved_branchers(void);
+  void post_basic_branchers(void);
   void post_complete_branchers(unsigned int s);
 
   // Master and slave configuration

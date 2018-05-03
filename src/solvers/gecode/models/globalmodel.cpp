@@ -744,6 +744,17 @@ void GlobalModel::post_callee_saved_branchers(void) {
 
 }
 
+void GlobalModel::post_basic_branchers() {
+  branch(*this, cost(), INT_VAR_NONE(), INT_VAL_MIN(),
+         NULL, &print_global_cost_decision);
+
+  branch(*this, v_a, BOOL_VAR_NONE(), BOOL_VAL_MIN());
+  branch(*this, v_i, INT_VAR_NONE(), INT_VAL_MIN());
+  branch(*this, v_y, INT_VAR_NONE(), INT_VAL_MIN());
+  branch(*this, v_c, INT_VAR_NONE(), INT_VAL_MIN(), &schedulable);
+  branch(*this, v_r, INT_VAR_NONE(), INT_VAL_MIN(), &global_assignable);
+}
+
 void GlobalModel::post_complete_branchers(unsigned int s) {
 
   branch(*this, cost(), INT_VAR_NONE(), INT_VAL_MIN(),
@@ -897,7 +908,7 @@ GlobalModel::constrain(const Space& _b) {
 
     string diversity_strategy = options->diversify();
     if (diversity_strategy == "registers") {
-        // ~(x_i ^ ry_i)
+        // ~(x_p ^ ry_p)
         // in words: make sure that the next solution does not have the same connected operands and the same operands to register allocation
         BoolVarArgs lits;
         for (operand p: input->P) {
@@ -909,15 +920,15 @@ GlobalModel::constrain(const Space& _b) {
     } else if (diversity_strategy == "difference") {
         // Do nothing
     } else if (diversity_strategy == "schedule") {
-	// ~(a_i ^ c_i ^ i_i)
+	// ~(a_o ^ c_o ^ i_o)
 	// in words: make sure that the next solution does not have the exact same active operations, issue cycles and instructions as the previous one
 	BoolVarArgs lits;
 	for (operation o: input->O) {
 	  lits << var(a(o) == b.a(o).val());
-	  if (b.a(o).val()) {
-	      lits << var(c(o) == b.c(o).val());
-	      lits << var(i(o) == b.i(o).val());
-	  }
+	  if(b.a(o).val()) {
+	    lits << var(c(o) == b.c(o).val());
+	    lits << var(i(o) == b.i(o).val());
+          }
 	}
 	if (lits.size() > 0) rel(*this, BOT_AND, lits, 0);
     }
