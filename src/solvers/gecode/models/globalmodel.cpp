@@ -897,67 +897,28 @@ GlobalModel::constrain(const Space& _b) {
 
     string diversity_strategy = options->diversify();
     if (diversity_strategy == "registers") {
-	// If it has the same connected temporaries as the previous solution => same_connected = 1
-	BoolVarArgs all_connected(*this, b.v_x.size(), 0, 1);
-	for(int i = 0; i < b.v_x.size(); i++) {
-	    rel(*this, v_x[i], IRT_EQ, b.v_x[i].val(), all_connected[i]);
-	}
-	BoolVar same_connected(*this, 0, 1);
-	rel(*this, BOT_AND, all_connected, same_connected);
-	
-	// If all the operands are connected to the same registers => same_registers = 1
-	BoolVarArgs all_registers(*this, b.v_ry.size(), 0, 1);
-	for(int i = 0; i < b.v_ry.size(); i++) {
-	    rel(*this, v_ry[i], IRT_EQ, b.v_ry[i].val(), all_registers[i]);
-	}
-	BoolVar same_registers(*this, 0, 1);
-	rel(*this, BOT_AND, all_registers, same_registers);
-
-	// Make sure that the new solutions doesn't have the same connected operands AND the operands are allocated to the same registers
-	rel(*this, same_connected, BOT_AND, same_registers, 0);
+        // ~(x_i ^ ry_i)
+        // in words: make sure that the next solution does not have the same connected operands and the same operands to register allocation
+        BoolVarArgs lits;
+        for (operand p: input->P) {
+	  lits << var(x(p) == b.x(p).val());
+          lits << var(ry(p) == b.ry(p).val());
+        }
+        if (lits.size() > 0) rel(*this, BOT_AND, lits, 0);
 
     } else if (diversity_strategy == "difference") {
         // Do nothing
     } else if (diversity_strategy == "schedule") {
-        // If it has the same active operations: same_active = 1
-        BoolVarArgs all_active(*this, b.v_a.size(), 0, 1);
-        for(int i = 0; i < b.v_a.size(); i++) {
-            rel(*this, v_a[i], IRT_EQ, b.v_a[i].val(), all_active[i] );
-        }
-        BoolVar same_active(*this, 0, 1);
-        rel(*this, BOT_AND, all_active, same_active );
-
-        //Get the indices of the active operations
-	vector<int> active_operations_indices;
-	for(int i = 0; i < b.v_a.size(); i++) {
-		if(b.v_a[i].val() == 1) {
-			active_operations_indices.push_back(i);
-		}
+	// ~(a_i ^ c_i ^ i_i)
+	// in words: make sure that the next solution does not have the exact same active operations, issue cycles and instructions as the previous one
+	BoolVarArgs lits;
+	for (operation o: input->O) {
+	  lits << var(a(o) == b.a(o).val());
+	  if (b.a(o).val()) {
+	      lits << var(c(o) == b.c(o).val());
+	      lits << var(i(o) == b.i(o).val());
+	  }
 	}
-
-	// If the active operations are issued at the same cycle as in previous solution: same_cycles = 1
-	BoolVarArgs all_cycles(*this, active_operations_indices.size(), 0, 1);
-        int i = 0;
-	for(int idx: active_operations_indices) {
-            // If the operations are issued at the same cycle
-	    rel(*this, v_c[idx], IRT_EQ, b.v_c[idx].val(), all_cycles[i] );
-            i++;
-        }
-	BoolVar tmp(*this, 0, 1);
-	rel(*this, BOT_AND, all_cycles, tmp );
-	BoolVar same_cycles(*this, 0, 1);
-	rel(*this, same_active, BOT_AND, tmp, same_cycles ); // If they have the same active instructions and they are issued at the same cycle
-
-	// If the operations are implemented by the same instruction as in previous solutions: same_instructions = 1
-        BoolVarArgs all_instructions(*this, b.v_i.size(), 0, 1);
-	for(int i = 0; i < b.v_i.size(); i++) {
-	    rel(*this, v_i[i], IRT_EQ, b.v_i[i].val(), all_instructions[i] );
-	}
-	BoolVar same_instructions(*this, 0, 1);
-	rel(*this, BOT_AND, all_instructions, same_instructions );
-
-	// Make sure that the next solution does not have the same active operations AND they are issued at the same cycle and implemented with the same instruction
-	rel(*this, same_cycles, BOT_AND, same_instructions, 0);
-
+	if (lits.size() > 0) rel(*this, BOT_AND, lits, 0);
     }
 }
