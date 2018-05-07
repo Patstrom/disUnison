@@ -44,7 +44,10 @@
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
 
-#include "diversity/diversity.hpp"
+#include <map>
+class GlobalModel;
+std::map<std::string, std::vector<int>> all_variables(const GlobalModel * nextm);
+void print_variables(std::map<std::string, std::vector<int>> first, std::map<std::string, std::vector<int>> second);
 
 #ifdef GRAPHICS
 #include <QtGui>
@@ -1176,7 +1179,7 @@ int main(int argc, char* argv[]) {
 
   // Monolothic solver
   GlobalModel * m = (GlobalModel*) base->clone();
-  m->post_complete_branchers(0);
+  m->post_basic_branchers();
 
 #ifdef GRAPHICS
   if (base->options->gist_global()) Gist::dfs(m, *go);
@@ -1184,7 +1187,7 @@ int main(int argc, char* argv[]) {
 
   Search::Options ro;
 
-  unsigned int FACTOR = 10;
+  unsigned int FACTOR = 50;
   double limit = base->options->monolithic_budget() * base->input->O.size() * FACTOR;
   Search::Stop * monolithicStop = new_stop(limit, base->options);
   if (base->options->verbose())
@@ -1207,6 +1210,11 @@ int main(int argc, char* argv[]) {
     exit(EXIT_FAILURE);
   }
 
+  // maps (active, instructions, cycles) to solution
+  map< tuple<vector<int>, vector<int>, vector<int>>, map<string, vector<int>> > stuff;
+
+  // maps (active, instructions, cycles) to index
+  map< tuple<vector<int>, vector<int>, vector<int>>, int > index;
   
   std::ofstream a_dot_out;
   t_solver.start();
@@ -1215,6 +1223,27 @@ int main(int argc, char* argv[]) {
     t_it.start();
 
     ResultData rd(nextm, false, 0, i, presolver_time, presolving_time, t_solver.stop(), t_it.stop()); 
+
+    vector<int> active, cycles, insts;
+    for(operation o: nextm->input->O) {
+      active.push_back(nextm->a(o).val());
+      if(nextm->a(o).val()) {
+        cycles.push_back(nextm->c(o).val());
+        insts.push_back(nextm->i(o).val());
+      }
+    }
+
+    auto key = make_tuple(active, cycles, insts);
+
+    if(stuff.count(key) > 0) {
+      cout << "Duplicate found!" << index[key] << ":" << i << endl;
+      print_variables(stuff[key], all_variables(nextm));
+      break;
+    } else {
+      stuff[key] = all_variables(nextm);
+      index[key] = i;
+    }
+
 
     // Write the solution to file
     string filename = dir.string() + "/" + std::to_string(i);
@@ -1241,4 +1270,89 @@ int main(int argc, char* argv[]) {
 
   emit_output_exit(base, results, gd, go);
 
+}
+
+void print_variables(map<string, vector<int>> first, map<string, vector<int>> second) {
+  for(auto const& x: first) {
+    cout << x.first << "1: [";
+    for(auto y: x.second) cout << y << ",";
+    cout << "\b]" << endl;
+
+    cout << x.first << "2: [";
+    for(auto y: second[x.first]) cout << y << ",";
+    cout << "\b]: " << (x.second == second[x.first] ? "equal" : "differ") << endl;
+  }
+}
+
+map<string, vector<int>> all_variables(const GlobalModel * nextm) {
+  map<string, vector<int>> sol;
+  sol["temp"] = vector<int>();
+  sol["instr"] = vector<int>();
+  sol["opr"] = vector<int>();
+  sol["r"] = vector<int>();
+  sol["y"] = vector<int>();
+  sol["x"] = vector<int>();
+  sol["ry"] = vector<int>();
+  sol["l"] = vector<int>();
+  sol["ls"] = vector<int>();
+  sol["ld"] = vector<int>();
+  sol["le"] = vector<int>();
+  //sol["al"] = vector<int>();
+  //sol["u"] = vector<int>();
+  sol["us"] = vector<int>();
+  sol["lt"] = vector<int>();
+  //sol["lat"] = vector<int>();
+  //sol["p"] = vector<int>();
+  //sol["users"] = vector<int>();
+  //sol["s"] = vector<int>();
+  //sol["f"] = vector<int>();
+  
+  sol["a"] = vector<int>();
+  sol["i"] = vector<int>();
+  sol["c"] = vector<int>();
+  
+  for(temporary t: nextm->input->T) {
+    sol["l"].push_back(nextm->l(t).val());
+    if(nextm->l(t).val()) {
+    	sol["temp"].push_back(nextm->temp(t));
+    	sol["r"].push_back(nextm->r(t).val());
+    	sol["ls"].push_back(nextm->ls(t).val());
+    	sol["ld"].push_back(nextm->ld(t).val());
+    	sol["le"].push_back(nextm->le(t).val());
+    	sol["us"].push_back(nextm->us(t).val());
+    }
+  //sol["users"].push_back(nextm->users(t).val());
+  }
+  
+  for(operation o: nextm->input->O) {
+    sol["a"].push_back(nextm->a(o).val());
+
+    try {
+    	sol["c"].push_back(nextm->c(o).val());
+    } catch(...) {
+	sol["c"].push_back(-2);
+    }
+    try {
+    	sol["i"].push_back(nextm->i(o).val());
+    } catch(...) {
+    	sol["i"].push_back(-2);
+    }
+
+    if(nextm->a(o).val()) {
+    	sol["instr"].push_back(nextm->instr(o));
+    }
+  }
+    
+  for(operand p: nextm->input->P) {
+    sol["x"].push_back(nextm->x(p).val());
+    if(nextm->x(p).val()) {
+    	sol["opr"].push_back(nextm->opr(p));
+    	sol["y"].push_back(nextm->y(p).val());
+    	sol["ry"].push_back(nextm->ry(p).val());
+    	sol["lt"].push_back(nextm->lt(p).val());
+    	//sol["s"].push_back(nextm->s(p).val());
+    }
+  }
+  
+  return sol;
 }
