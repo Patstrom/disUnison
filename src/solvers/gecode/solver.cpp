@@ -40,11 +40,8 @@
 #include <cstring>
 #include <string>
 #include <cmath>
-
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-
-#include "diversity/diversity.hpp"
+#include <algorithm>
+#include <cctype>
 
 #ifdef GRAPHICS
 #include <QtGui>
@@ -67,6 +64,10 @@ namespace fs = std::experimental::filesystem;
 #include "models/localmodel.hpp"
 #include "procedures/globalprocedures.hpp"
 #include "procedures/localprocedures.hpp"
+
+#include "models/diversitymodel.hpp"
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
 
 #ifndef GRAPHICS
 #include "third-party/jsoncpp/json/value.h"
@@ -614,6 +615,11 @@ int main(int argc, char* argv[]) {
 
 #endif
 
+  // Diversity options
+  // If the "diversify" flag is only whitespaces we don't diverify. I.e if no 
+  // diversification strategy is supplied, proceed as usual.
+  bool diversify = !std::all_of(options.diversify().begin(), options.diversify().end(), ::isspace);
+
   vector<ResultData> results;
   vector<vector<LocalModel *> > local_solutions;
   for (unsigned int b = 0; b < input.B.size(); b++)
@@ -878,8 +884,7 @@ int main(int argc, char* argv[]) {
 
 
   // This actually solves it
-  if (options.decomposition() && false) {
-
+  if (options.decomposition() && !diversify) {
     unsigned long int iteration = 0;
 
     // Whether the current iteration is a "deactivation iteration"
@@ -1174,62 +1179,65 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  // Monolothic solver
-  GlobalModel * m = (GlobalModel*) base->clone();
-  m->post_complete_branchers(0);
+  // Diversity Solver
+  if(diversify) {
+    DiversityModel * m =  (DiversityModel*) base->clone() ;
+    m->post_complete_branchers(0);
 
-#ifdef GRAPHICS
-  if (base->options->gist_global()) Gist::dfs(m, *go);
-#endif
+  #ifdef GRAPHICS
+    if (base->options->gist_global()) Gist::bab(m, *go);
+  #endif
 
-  Search::Options ro;
+    Search::Options ro;
 
-  unsigned int FACTOR = 10;
-  double limit = base->options->monolithic_budget() * base->input->O.size() * FACTOR;
-  Search::Stop * monolithicStop = new_stop(limit, base->options);
-  if (base->options->verbose())
-    cerr << monolithic() << "time limit: " << limit << endl;
-  ro.stop = monolithicStop;
+    unsigned int FACTOR = 10;
+    double limit = base->options->monolithic_budget() * base->input->O.size() * FACTOR; // re-use the monolithic_budget flag
+    Search::Stop * diversityStop = new_stop(limit, base->options);
+    if (base->options->verbose())
+      cerr << diversity() << "time limit: " << limit << endl;
+    ro.stop = diversityStop;
 
-  // Find the diversification strategies
-  m->parse_strategies();
+    // Create the engine
+    DFS<DiversityModel> e(m, ro);
 
-  // Create the engine
-  BAB<GlobalModel> e(m, ro);
+    // Create the output directory
+    fs::path dir = fs::current_path();
+    dir /= m->options->output_file(); // Use output file as name for output directory
+    try {
+      fs::create_directory(dir);
+      if(options.verbose()) cerr << diversity() << "Created directory " << dir.string() << endl;
+    } catch (const exception &e) {
+      cerr << diversity() << e.what();
+      exit(EXIT_FAILURE);
+    }
 
-  // Create the output directory
-  fs::path dir = fs::current_path();
-  dir /= m->options->output_file(); // Use output file as name for output directory
-  try {
-    fs::create_directory(dir);
-  } catch (const exception &e) {
-    cerr << e.what();
-    exit(EXIT_FAILURE);
-  }
-
-  
-  std::ofstream a_dot_out;
-  t_solver.start();
-  for (int i = 0; GlobalModel* nextm = e.next(); ++i) {
+    std::ofstream a_dot_out;
     Support::Timer t_it;
+
+    t_solver.start();
     t_it.start();
+    int version_number = 0;
+    while(DiversityModel* nextm = e.next()) {
+      ResultData rd(nextm, false, 0, version_number, presolver_time, presolving_time, t_solver.stop(), t_it.stop()); 
 
-    ResultData rd(nextm, false, 0, i, presolver_time, presolving_time, t_solver.stop(), t_it.stop()); 
+      // Write the solution to file
+      string filename = dir.string() + "/" + std::to_string(version_number);
+      a_dot_out.open( filename );
+      a_dot_out << produce_json(rd, gd, nextm->input->N, 0) << endl;
+      a_dot_out.close();
 
-    // Write the solution to file
-    string filename = dir.string() + "/" + std::to_string(i);
-    a_dot_out.open( filename );
-    a_dot_out << produce_json(rd, gd, nextm->input->N, 0) << endl;
-    a_dot_out.close();
+      DiversityModel* oldm = m;
+      m = nextm;
 
-    GlobalModel* oldm = m;
-    m = nextm;
+      delete oldm;
+      t_it.start();
+      version_number++;
+    }
 
-    delete oldm;
+    delete diversityStop;
+    if(options.verbose()) cerr << diversity() << "Found " << (version_number + 1) << " solutions" << endl;
   }
-
-  delete monolithicStop;
-  // monolithic solver stop
+  // diversity solver stop
 
   execution_time = t.stop();
 
@@ -1240,5 +1248,4 @@ int main(int argc, char* argv[]) {
   }
 
   emit_output_exit(base, results, gd, go);
-
 }

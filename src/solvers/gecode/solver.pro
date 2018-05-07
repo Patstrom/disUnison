@@ -40,6 +40,7 @@ HEADERS += common/definitions.hpp \
            models/localmodel.hpp \
            models/completemodel.hpp \
            models/globalmodel.hpp \
+           models/diversitymodel.hpp \
            models/simplemodel.hpp \
            models/relaxedmodel.hpp \
            branchers/filters.hpp \
@@ -50,8 +51,7 @@ HEADERS += common/definitions.hpp \
            branchers/routingbrancher.hpp \
            procedures/commonprocedures.hpp \
            procedures/globalprocedures.hpp \
-           procedures/localprocedures.hpp \
-           diversity/diversity.hpp
+           procedures/localprocedures.hpp
 
 
 SOURCES += third-party/jsoncpp/json_reader.cpp \
@@ -66,6 +66,7 @@ SOURCES += third-party/jsoncpp/json_reader.cpp \
            models/localmodel.cpp \
            models/completemodel.cpp \
            models/globalmodel.cpp \
+           models/diversitymodel.cpp \
            models/simplemodel.cpp \
            models/relaxedmodel.cpp \
            branchers/filters.cpp \
@@ -77,7 +78,6 @@ SOURCES += third-party/jsoncpp/json_reader.cpp \
            procedures/commonprocedures.cpp \
            procedures/globalprocedures.cpp \
            procedures/localprocedures.cpp \
-           diversity/diversity.cpp \
            solver.cpp
 
 ENV_CXX = $$(CXX)
@@ -88,7 +88,7 @@ INCLUDEPATH = $$(CPATH)
 QMAKE_LIBDIR = $$(LIBRARY_PATH)
 QMAKE_LFLAGS = $$(LDFLAGS)
 
-QMAKE_CXXFLAGS += -std=c++0x
+QMAKE_CXXFLAGS += -std=c++17
 
 LIBS += -lpthread -lgecodedriver
 CONFIG(graphics) {

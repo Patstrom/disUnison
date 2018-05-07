@@ -40,8 +40,6 @@
 #include "branchers/merit.hpp"
 #include "branchers/value.hpp"
 
-#include "diversity/diversity.hpp"
-
 using namespace Gecode;
 using namespace std;
 
@@ -173,7 +171,6 @@ public:
 
   void post_branchers(void);
   void post_callee_saved_branchers(void);
-  void post_basic_branchers(void);
   void post_complete_branchers(unsigned int s);
 
   // Master and slave configuration
@@ -199,16 +196,6 @@ public:
 
   void apply_solution_and_deactivate(GlobalModel * gs,
                                      vector<activation_class> & acs);
-
-  // Diversity related stuff
-  vector<diversity_function> strategies;
-
-  void parse_strategies() {
-    strategies = Diversity::strategies(options->diversify());
-  }
-   
-  // A futile attempt at something
-  virtual void constrain(const Space& _b);
 };
 
 #endif
