@@ -55,6 +55,7 @@ protected:
   Driver::StringValueOption _lower_bound_file; // Lower bound file
 
   Driver::StringValueOption _diversify; // Diversification strategies
+  Driver::IntOption _solution_distance;
 
 #ifdef GRAPHICS
   Driver::BoolOption _gist_global; // Run Gist for global problems
@@ -144,6 +145,7 @@ public:
   string lower_bound_file(void) const {return _lower_bound_file.value();}
 
   string diversify(void) const {return _diversify.value();}
+  int solution_distance(void) const {return _solution_distance.value();}
 
 #ifdef GRAPHICS
   bool gist_global(void) const {return _gist_global.value();}

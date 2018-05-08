@@ -1207,29 +1207,32 @@ int main(int argc, char* argv[]) {
   Support::Timer t_it;
   std::ofstream a_dot_out;
 
-  int solution_distance = 1;
+  unsigned int solution_distance = m->options->solution_distance();
   if (m->options->verbose()) cerr << diversity() << "Solution distance: " << solution_distance << endl;
-  std::vector<ResultData> to_output;
+
+  unsigned int buffer_size = 100;
+  stack<tuple<int, string>> to_output;
 
   t_solver.start();
   t_it.start();
   int version_number = 0;
   while(GlobalModel* nextm = e.next()) {
 
+    // Only save every solution_distance solution
     if(version_number % solution_distance == 0) {
       ResultData rd(nextm, false, 0, version_number, presolver_time, presolving_time, t_solver.stop(), t_it.stop()); 
-      to_output.push_back(rd);
+      to_output.push(make_tuple(version_number, produce_json(rd, gd, nextm->input->N, 0)));
     }
 
     // Write the solutions to file
-    if (to_output.size() == 100) {
+    if (to_output.size() >= buffer_size) {
       while(!to_output.empty()) {
-        ResultData output_data = to_output.back();
-        string filename = dir.string() + "/" + std::to_string(output_data.it_node);
+        auto output_data = to_output.top();
+        string filename = dir.string() + "/" + std::to_string(get<0>(output_data));
         a_dot_out.open( filename );
-        a_dot_out << produce_json(output_data, gd, nextm->input->N, 0) << endl;
+        a_dot_out << get<1>(output_data) << endl;
         a_dot_out.close();
-        to_output.pop_back();
+        to_output.pop();
       }
     }
 
@@ -1239,6 +1242,18 @@ int main(int argc, char* argv[]) {
     delete oldm;
     version_number++;
     t_it.start();
+  }
+
+  // If we haven't filled the buffer even once print all solutions we have
+  if(version_number / solution_distance <= buffer_size) {
+    while(!to_output.empty()) {
+      auto output_data = to_output.top();
+      string filename = dir.string() + "/" + std::to_string(get<0>(output_data));
+      a_dot_out.open( filename );
+      a_dot_out << get<1>(output_data) << endl;
+      a_dot_out.close();
+      to_output.pop();
+    }
   }
 
   delete monolithicStop;

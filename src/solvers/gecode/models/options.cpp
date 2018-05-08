@@ -46,6 +46,7 @@ ModelOptions::ModelOptions(void)
     _lower_bound_file("l", "lower bound file", ""),
 
     _diversify("diversify", "The strategies to apply during the diversification process (as a comma-seperated list)", ""),
+    _solution_distance("solution-distance", "Number of solutions to skip between emitting", 1),
 
 #ifdef GRAPHICS
     _gist_global("gist-global", "run Gist for global problems", false),
@@ -124,6 +125,7 @@ ModelOptions::ModelOptions(void)
   add(_lower_bound_file);
 
   add(_diversify);
+  add(_solution_distance);
 
 #ifdef GRAPHICS
   add(_gist_global);
