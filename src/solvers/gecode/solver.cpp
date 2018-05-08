@@ -44,8 +44,6 @@
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
 
-#include "diversity/diversity.hpp"
-
 #ifdef GRAPHICS
 #include <QtGui>
 #include <QtScript/QScriptEngine>
@@ -1187,12 +1185,9 @@ int main(int argc, char* argv[]) {
   unsigned int FACTOR = 10;
   double limit = base->options->monolithic_budget() * base->input->O.size() * FACTOR;
   Search::Stop * monolithicStop = new_stop(limit, base->options);
-  if (base->options->verbose())
-    cerr << monolithic() << "time limit: " << limit << endl;
+  if (m->options->verbose())
+    cerr << diversity() << "time limit: " << limit << endl;
   ro.stop = monolithicStop;
-
-  // Find the diversification strategies
-  m->parse_strategies();
 
   // Create the engine
   BAB<GlobalModel> e(m, ro);
@@ -1202,33 +1197,52 @@ int main(int argc, char* argv[]) {
   dir /= m->options->output_file(); // Use output file as name for output directory
   try {
     fs::create_directory(dir);
+    if (m->options->verbose()) cerr << diversity() << "created directory " << dir.string() << endl;
   } catch (const exception &e) {
     cerr << e.what();
     exit(EXIT_FAILURE);
   }
 
   
+  Support::Timer t_it;
   std::ofstream a_dot_out;
+
+  int solution_distance = 1;
+  if (m->options->verbose()) cerr << diversity() << "Solution distance: " << solution_distance << endl;
+  std::vector<ResultData> to_output;
+
   t_solver.start();
-  for (int i = 0; GlobalModel* nextm = e.next(); ++i) {
-    Support::Timer t_it;
-    t_it.start();
+  t_it.start();
+  int version_number = 0;
+  while(GlobalModel* nextm = e.next()) {
 
-    ResultData rd(nextm, false, 0, i, presolver_time, presolving_time, t_solver.stop(), t_it.stop()); 
+    if(version_number % solution_distance == 0) {
+      ResultData rd(nextm, false, 0, version_number, presolver_time, presolving_time, t_solver.stop(), t_it.stop()); 
+      to_output.push_back(rd);
+    }
 
-    // Write the solution to file
-    string filename = dir.string() + "/" + std::to_string(i);
-    a_dot_out.open( filename );
-    a_dot_out << produce_json(rd, gd, nextm->input->N, 0) << endl;
-    a_dot_out.close();
+    // Write the solutions to file
+    if (to_output.size() == 100) {
+      while(!to_output.empty()) {
+        ResultData output_data = to_output.back();
+        string filename = dir.string() + "/" + std::to_string(output_data.it_node);
+        a_dot_out.open( filename );
+        a_dot_out << produce_json(output_data, gd, nextm->input->N, 0) << endl;
+        a_dot_out.close();
+        to_output.pop_back();
+      }
+    }
 
     GlobalModel* oldm = m;
     m = nextm;
 
     delete oldm;
+    version_number++;
+    t_it.start();
   }
 
   delete monolithicStop;
+  if(m->options->verbose()) cerr << diversity() << "Found " << version_number  << " solutions" << endl;
   // monolithic solver stop
 
   execution_time = t.stop();
