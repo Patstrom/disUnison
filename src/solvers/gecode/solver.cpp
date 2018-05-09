@@ -41,6 +41,7 @@
 #include <string>
 #include <cmath>
 
+#include <stack>
 #include <experimental/filesystem>
 namespace fs = std::experimental::filesystem;
 
@@ -1244,16 +1245,14 @@ int main(int argc, char* argv[]) {
     t_it.start();
   }
 
-  // If we haven't filled the buffer even once print all solutions we have
-  if(version_number / solution_distance <= buffer_size) {
-    while(!to_output.empty()) {
-      auto output_data = to_output.top();
-      string filename = dir.string() + "/" + std::to_string(get<0>(output_data));
-      a_dot_out.open( filename );
-      a_dot_out << get<1>(output_data) << endl;
-      a_dot_out.close();
-      to_output.pop();
-    }
+  // Empty the buffer
+  while(!to_output.empty()) {
+    auto output_data = to_output.top();
+    string filename = dir.string() + "/" + std::to_string(get<0>(output_data));
+    a_dot_out.open( filename );
+    a_dot_out << get<1>(output_data) << endl;
+    a_dot_out.close();
+    to_output.pop();
   }
 
   delete monolithicStop;
