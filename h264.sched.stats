@@ -1,0 +1,36 @@
+
+root@15f687001dae:~/unison/src# gecode-solver -solution-distance 1 -monolithic-budget 600 -o h264.test/ -diversify schedule unison/test/fast/h264ref.vlc.symbol2uvlc/h264.ext.json 
+[global] variables: 917 int, 1479 bool, 92 set
+[global] cost: {[7..52]}, optimality gap: {642.86%}
+[pre]	 computing effective callee-saved copies...
+[pre]	 presolving time (effective callee-saved spilling): 5 ms
+[pre]	 computing lower bounds for cluster connections...
+[pre]	 presolving time (global cluster impact): 1 ms
+[pre]	 presolving time (global shaving): 7 ms
+[pre]	 computing instruction nogoods for b0...
+[pre]	 presolving time (shaving): 4322 ms
+[pre]	 computing activation nogoods for {o1,o49}...
+[pre]	 presolving time (global activation shaving): 4 ms
+[pre]	 cost: {[7..52]}, optimality gap: {642.86%}
+[pre]	 presolving time: 4337 ms
+[div]	 time limit: 318000
+[div]	 created directory /root/unison/src/h264.test/
+[div]	 Solution distance: 1
+[div]	 Found 395097 solutions
+execution time: 322355 ms
+total failed nodes in all problems: 0
+total searched nodes in all problems: 0
+root@15f687001dae:~/unison/src# 
+root@15f687001dae:~/unison/src# 
+root@15f687001dae:~/unison/src# ls
+Makefile  __pycache__  duder  export_directory  h264.test  milc  presolver-reference  solvers  test_script.py  uni_generate.sh  unison  unison-specsgen
+root@15f687001dae:~/unison/src# ./duder schedule h264.test/ 
+^C
+root@15f687001dae:~/unison/src# time ./duder schedule h264.test/
+288771 solutions occur one time
+60914 solutions occur two times
+45315 solutions occur more than two times
+
+real	148m45.787s
+user	144m44.798s
+sys	2m58.273s
