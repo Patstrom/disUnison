@@ -920,14 +920,13 @@ GlobalModel::constrain(const Space& _b) {
     } else if (diversity_strategy == "difference") {
         // Do nothing
     } else if (diversity_strategy == "schedule") {
-	// ~(a_o ^ c_o ^ i_o)
-	// in words: make sure that the next solution does not have the exact same active operations, issue cycles and instructions as the previous one
+	// ~(a_o ^ c_o)
+	// in words: make sure that the next solution does not have the exact same active operations and issue cycles as the previous one
 	BoolVarArgs lits;
 	for (operation o: input->O) {
 	  lits << var(a(o) == b.a(o).val());
 	  if(b.a(o).val()) {
 	    lits << var(c(o) == b.c(o).val());
-	    lits << var(i(o) == b.i(o).val());
           }
 	}
 	if (lits.size() > 0) rel(*this, BOT_AND, lits, 0);
