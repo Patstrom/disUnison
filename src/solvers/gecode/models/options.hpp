@@ -56,6 +56,7 @@ protected:
 
   Driver::StringValueOption _diversify; // Diversification strategies
   Driver::IntOption _solution_distance;
+  Driver::IntOption _num_solutions;
 
 #ifdef GRAPHICS
   Driver::BoolOption _gist_global; // Run Gist for global problems
@@ -146,6 +147,7 @@ public:
 
   string diversify(void) const {return _diversify.value();}
   int solution_distance(void) const {return _solution_distance.value();}
+  int num_solutions(void) const {return _num_solutions.value();}
 
 #ifdef GRAPHICS
   bool gist_global(void) const {return _gist_global.value();}

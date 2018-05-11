@@ -47,6 +47,7 @@ ModelOptions::ModelOptions(void)
 
     _diversify("diversify", "The strategies to apply during the diversification process (as a comma-seperated list)", ""),
     _solution_distance("solution-distance", "Number of solutions to skip between emitting", 1),
+    _num_solutions("num-solutions", "The number of solutions to print (0 means all)", 0),
 
 #ifdef GRAPHICS
     _gist_global("gist-global", "run Gist for global problems", false),
@@ -126,6 +127,7 @@ ModelOptions::ModelOptions(void)
 
   add(_diversify);
   add(_solution_distance);
+  add(_num_solutions);
 
 #ifdef GRAPHICS
   add(_gist_global);

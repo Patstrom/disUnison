@@ -1183,12 +1183,21 @@ int main(int argc, char* argv[]) {
 
   Search::Options ro;
 
+  int number_to_print = m->options->num_solutions();
   unsigned int FACTOR = 10;
   double limit = base->options->monolithic_budget() * base->input->O.size() * FACTOR;
   Search::Stop * monolithicStop = new_stop(limit, base->options);
-  if (m->options->verbose())
-    cerr << diversity() << "time limit: " << limit << endl;
-  ro.stop = monolithicStop;
+  if(number_to_print <= 0) {
+    ro.stop = monolithicStop;
+    if (m->options->verbose()) {
+      cerr << diversity() << "time limit: " << limit << endl;
+    } 
+  } else {
+    if (m->options->verbose()) {
+      cerr << diversity() << "Printing " << number_to_print << " solutions" << endl;
+    }
+  }
+  
 
   // Create the engine
   BAB<GlobalModel> e(m, ro);
@@ -1217,6 +1226,7 @@ int main(int argc, char* argv[]) {
   t_solver.start();
   t_it.start();
   int version_number = 0;
+  int solutions_printed = 0;
   while(GlobalModel* nextm = e.next()) {
 
     // Only save every solution_distance solution
@@ -1227,13 +1237,14 @@ int main(int argc, char* argv[]) {
 
     // Write the solutions to file
     if (to_output.size() >= buffer_size) {
-      while(!to_output.empty()) {
+      while(!to_output.empty() && solutions_printed < number_to_print) {
         auto output_data = to_output.top();
         string filename = dir.string() + "/" + std::to_string(get<0>(output_data));
         a_dot_out.open( filename );
         a_dot_out << get<1>(output_data) << endl;
         a_dot_out.close();
         to_output.pop();
+        solutions_printed++;
       }
     }
 
@@ -1241,12 +1252,17 @@ int main(int argc, char* argv[]) {
     m = nextm;
 
     delete oldm;
+
+    if (solutions_printed >= number_to_print) {
+      break;
+    }
+
     version_number++;
     t_it.start();
   }
 
   // Empty the buffer
-  while(!to_output.empty()) {
+  while(!to_output.empty() && solutions_printed < number_to_print) {
     auto output_data = to_output.top();
     string filename = dir.string() + "/" + std::to_string(get<0>(output_data));
     a_dot_out.open( filename );
