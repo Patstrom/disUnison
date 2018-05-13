@@ -8,6 +8,7 @@ mkdir ${directory}exported
 i=0
 for FILE in $directory*
 do
+   if [ -d ${FILE} ]; then continue; fi
    uni export $alt_file -o ${directory}exported/$(basename ${FILE}).unison.mir --solfile=$FILE
    ((i++))
 
