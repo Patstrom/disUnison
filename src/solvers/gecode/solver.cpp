@@ -1237,7 +1237,7 @@ int main(int argc, char* argv[]) {
 
     // Write the solutions to file
     if (to_output.size() >= buffer_size) {
-      while(!to_output.empty() && solutions_printed < number_to_print) {
+      while(!to_output.empty() && (solutions_printed < number_to_print || number_to_print <= 0) ) {
         auto output_data = to_output.top();
         string filename = dir.string() + "/" + std::to_string(get<0>(output_data));
         a_dot_out.open( filename );
@@ -1253,7 +1253,7 @@ int main(int argc, char* argv[]) {
 
     delete oldm;
 
-    if (solutions_printed >= number_to_print) {
+    if (number_to_print > 0 && solutions_printed >= number_to_print) {
       break;
     }
 
@@ -1262,7 +1262,7 @@ int main(int argc, char* argv[]) {
   }
 
   // Empty the buffer
-  while(!to_output.empty() && solutions_printed < number_to_print) {
+  while(!to_output.empty() && (solutions_printed < number_to_print || number_to_print <= 0) ) {
     auto output_data = to_output.top();
     string filename = dir.string() + "/" + std::to_string(get<0>(output_data));
     a_dot_out.open( filename );
@@ -1272,7 +1272,7 @@ int main(int argc, char* argv[]) {
   }
 
   delete monolithicStop;
-  if(m->options->verbose()) cerr << diversity() << "Found " << version_number  << " solutions" << endl;
+  if(m->options->verbose()) cerr << diversity() << "Found " << (version_number + 1)  << " solutions" << endl;
   // monolithic solver stop
 
   execution_time = t.stop();
