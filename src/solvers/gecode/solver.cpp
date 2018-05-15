@@ -1194,6 +1194,9 @@ int main(int argc, char* argv[]) {
     } 
   } else {
     if (m->options->verbose()) {
+      double to_limit = 1000 * 60 * 30; // 30 minute time limit
+      Search::Stop * timeout = new_stop(to_limit , base->options);
+      ro.stop = timeout;
       cerr << diversity() << "Printing " << number_to_print << " solutions" << endl;
     }
   }
