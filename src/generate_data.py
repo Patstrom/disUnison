@@ -28,18 +28,27 @@ a structure that looks like this:
 and so on... I.e all version "0" from "schedule" of distance "1" should be in programs.sched.1/0/
 
 """
+FUNCTION_DIR = "functions"
+PROGRAM_DIR = "programs"
 
-#tests_dir = "./unison/test/fast/Hexagon/speed/"
-#new_dir = "functions/"
-#
-#test_files = os.listdir(tests_dir)
-#
-#function_names = []
-#for test_file in test_files:
-#    if ".mir" in test_file:
-#        function_name = test_file[0:test_file.index(".mir")]
-#        if ".asm" not in function_name:
-#            function_names.append(function_name)
+# Setup top level directories
+if not os.path.exists(FUNCTION_DIR):
+    os.mkdir(FUNCTION_DIR)
+
+if not os.path.exists(PROGRAM_DIR):
+    os.mkdir(PROGRAM_DIR)
+
+
+tests_dir = "./unison/test/fast/Hexagon/speed/"
+
+test_files = os.listdir(tests_dir)
+
+function_names = []
+for test_file in test_files:
+    if ".mir" in test_file:
+        function_name = test_file[0:test_file.index(".mir")]
+        if ".asm" not in function_name:
+            function_names.append(function_name)
 #
 #function_names.remove("sphinx3.glist.glist_tail") # Already done
 #function_names.remove("sphinx3.profile.ptmr_init") # Already done
@@ -69,33 +78,23 @@ function_names.remove("gcc.xexit.xexit") # Problematic
 function_names.remove("hmmer.tophits.AllocFancyAli") # Problematic
 
 
-
 # Create a new directory structure
-#try:
+#for function in function_names:
+#    nd = os.path.join(FUNCTION_DIR, function, "")
+#    print(nd)
 #    try:
-#        os.mkdir("functions")
+#        os.mkdir(nd)
 #    except Exception:
 #        pass
-#    try:
-#        for function in function_names:
-#            nd = new_dir + function + "/"
-#            try:
-#                os.mkdir(nd)
-#            except Exception:
-#                pass
-#            for ext in [".mir", ".asm.mir"]:
-#                shutil.copyfile(tests_dir + function + ext, nd + function + ext)
-#    except Exception as e:
-#        pass
-#except Exception as e:
-#    print("Top-level failure during dir structure", e)
+#    for ext in [".mir", ".asm.mir"]:
+#        shutil.copyfile(tests_dir + function + ext, nd + function + ext)
 #
 ## Run uni_generate on everything
 #for function in function_names:
-#    path = new_dir + function + "/"
+#    path = os.path.join(FUNCTION_DIR, function)
 #    os.chdir(path)
 #    # Generate the files
-#    command = "../../uni_generate.sh " + function + ".mir " + function + ".asm.mir"
+#    command = "../../uni_generate.sh {0}.mir {0}.asm.mir".format(function)
 #    print("Executing command:", command)
 #    subprocess.call(shlex.split(command))
 #    os.chdir("../..")
@@ -104,71 +103,67 @@ strategies = { "difference": "diff", "schedule": "sched", "registers": "register
 solution_distances = [1, 10, 100, 1000]
 
 #for function in function_names:
-#    path = new_dir + function
+#    path = os.path.join(FUNCTION_DIR, function)
 #    os.chdir(path)
 #    # Run gecode solver
 #    for strat, output in strategies.items():
 #        for dist in solution_distances:
-#            output_dir = function + "." + output + "." + str(dist)
-#            command = "gecode-solver -num-solutions 1000 -solution-distance {} -o {} -diversify {} {}" \
-#                .format(dist, output_dir, strat, function + ".ext.json" )
+#            output_dir = "{}.{}.{}/".format(function, output, dist)
+#            command = "gecode-solver -num-solutions 1000 -solution-distance {} -o {} -diversify {} {}.ext.json" \
+#                .format(dist, output_dir, strat, function )
 #            print("Executing command:", command)
 #            subprocess.call(shlex.split(command))
-#
-#            #export_command = "../../export_directory " + function + ".alt.uni " + output_dir + "/"
-#            #print("Executing command:", export_command)
-#            #subprocess.call(shlex.split(export_command))
 #    os.chdir("../..")
 
-## Due to the gecode search engine requiring the constrain() function to be monotonic
-## (which the diversify implementation is not) sometimes duplicates are generated. To fix
-## this I used the "duder" utility to find the duplicates and then generated more solutions
-## for that function until I had 1000 unique versions. Does some versions might have the
-## wrong label (since I remove the duplicates)
+# Due to the gecode search engine requiring the constrain() function to be monotonic
+# (which the diversify implementation is not) sometimes duplicates are generated. To fix
+# this I used the "duder" utility to find the duplicates and then generated more solutions
+# for that function until I had 1000 unique versions. Does some versions might have the
+# wrong label (since I remove the duplicates)
 
-for function in function_names:
-    path = new_dir + function
-    for strat, output in strategies.items():
-        for dist in solution_distances:
-            output_dir = function + "." + output + "." + str(dist)
-            for i, f in enumerate(os.listdir(output_dir)):
-                version = int(f)
-                print(version)
-#
-## Export
+
+# Export
 #for function in function_names:
-#    path = new_dir + function
+#    path = os.path.join(FUNCTION_DIR, function)
 #    os.chdir(path)
 #    for strat, output in strategies.items():
 #        for dist in solution_distances:
-#            output_dir = function + "." + output + "." + str(dist)
+#            output_dir = "{}.{}.{}/".format(function, output, dist)
 #
-#            export_command = "../../export_directory " + function + ".alt.uni " + output_dir + "/"
+#            export_command = "../../export_directory {}.alt.uni {}".format(function, output_dir)
 #            print("Executing command:", export_command)
 #            subprocess.call(shlex.split(export_command))
 #    os.chdir("../..")
 
-## Make program directories
-#for strat, output in strategies.items():
-#    for dist in solution_distances:
-#        try:
-#            os.mkdir("program.{}.{}".format(strat, dist))
-#        except Exception:
-#            pass
-#
-## Move everything around
+# Move everything around
 #for function in function_names:
-#    old_path = new_dir + function
+#    old_path = os.path.join(FUNCTION_DIR, function)
 #    for strat, output in strategies.items():
 #        for dist in solution_distances:
-#            new_dir = "program.{}.{}".format(strat,dist)
-#            old_dir = old_path + "/{}.{}.{}/exported".format(function, strat, dist)
+#            old_dir = os.path.join(old_path, "{}.{}.{}".format(function, output, dist), "exported")
+#            new_dir = os.path.join(PROGRAM_DIR, "program.{}.{}".format(output, dist))
 #            for f in os.listdir(old_dir):
 #                version = f[0:f.index(".unison.mir")]
-#                new_path = new_dir + "/" + version
-#                try:
-#                    os.makedir(new_path)
-#                except Exception:
-#                    pass
-#                print(old_dir + f, new_path + function + version)
-#                #shutil.copyfile(old_dir + f, new_path + function)
+#                new_path = os.path.join(new_dir, version)
+#                if not os.path.exists(new_path):
+#                    os.makedirs(new_path)
+#                old_name = os.path.join(old_dir, f)
+#                new_name = os.path.join(new_path, "{}-{}.unison.mir".format(function, version))
+#                shutil.copyfile(old_name, new_name)
+
+# Find the costs of everything and add it to the place where it belongs
+import json
+for function in function_names:
+    function_base_dir = os.path.join(FUNCTION_DIR)
+    for strat,output in strategies.items():
+        for dist in solution_distances:
+            raw_json_dir = os.path.join(function_base_dir, function, "{}.{}.{}".format(function, output, dist))
+            files = [f for f in os.listdir(raw_json_dir) if os.path.isfile(os.path.join(raw_json_dir, f))] # Get all files from out_json_dir
+
+            for f in files:
+                with open(os.path.join(raw_json_dir, f)) as input_file:
+                    version = int(f) # Make sure it's actually an integer
+                    output_file = os.path.join(PROGRAM_DIR, "program.{}.{}".format(output, dist), str(version), "cost")
+                    cost = json.load(input_file)["cost"][0] # Cost is a list in case multipl goals are specified. We only use one
+                    with open(output_file, "a") as out:
+                        out.write("{}: {}\n".format(function, cost))
