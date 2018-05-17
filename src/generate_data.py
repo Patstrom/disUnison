@@ -136,7 +136,7 @@ solution_distances = [1, 10, 100, 1000]
 #    os.chdir("../..")
 
 # Move everything around
-#from itertools import cycle, islice
+from itertools import cycle, islice
 #for function in function_names:
 #    old_path = os.path.join(FUNCTION_DIR, function)
 #    for strat, output in strategies.items():
@@ -157,18 +157,19 @@ solution_distances = [1, 10, 100, 1000]
 #                shutil.copyfile(old_name, new_name)
 
 # Find the costs of everything and add it to the place where it belongs
-#import json
-#for function in function_names:
-#    function_base_dir = os.path.join(FUNCTION_DIR)
-#    for strat,output in strategies.items():
-#        for dist in solution_distances:
-#            raw_json_dir = os.path.join(function_base_dir, function, "{}.{}.{}".format(function, output, dist))
-#            files = [f for f in os.listdir(raw_json_dir) if os.path.isfile(os.path.join(raw_json_dir, f))] # Get all files from out_json_dir
-#
-#            for f in files:
-#                with open(os.path.join(raw_json_dir, f)) as input_file:
-#                    version = int(f) # Make sure it's actually an integer
-#                    output_file = os.path.join(PROGRAM_DIR, "program.{}.{}".format(output, dist), str(version), "cost")
-#                    cost = json.load(input_file)["cost"][0] # Cost is a list in case multipl goals are specified. We only use one
-#                    with open(output_file, "a") as out:
-#                        out.write("{}: {}\n".format(function, cost))
+import json
+for function in function_names:
+    function_base_dir = os.path.join(FUNCTION_DIR)
+    for strat,output in strategies.items():
+        for dist in solution_distances:
+            raw_json_dir = os.path.join(function_base_dir, function, "{}.{}.{}".format(function, output, dist))
+            files = [f for f in os.listdir(raw_json_dir) if os.path.isfile(os.path.join(raw_json_dir, f))] # Get all files from out_json_dir
+            files.sort(key=int)
+
+            for i, f in enumerate(islice(cycle(files), 1000)):
+                with open(os.path.join(raw_json_dir, f)) as input_file:
+                    version = str(i * dist) 
+                    output_file = os.path.join(PROGRAM_DIR, "program.{}.{}".format(output, dist), version, "cost")
+                    cost = json.load(input_file)["cost"][0] # Cost is a list in case multiple goals are specified. We only use one
+                    with open(output_file, "a") as out:
+                        out.write("{}: {}\n".format(function, cost))
