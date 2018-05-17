@@ -901,12 +901,12 @@ apply_solution_and_deactivate(GlobalModel * gs,
   }
 }
 
-// A futile attempt at something
-void
-GlobalModel::constrain(const Space& _b) {
-    const GlobalModel& b = static_cast<const GlobalModel&>(_b);
+void GlobalModel::next(const GlobalModel& b) {
+    string diversity_strategy == options->diversify();
+    if (diversity_strategy == "enumerate") {
 
-    string diversity_strategy = options->diversify();
+    }
+
     if (diversity_strategy == "registers") {
         // ~(x_p ^ ry_p)
         // in words: make sure that the next solution does not have the same connected operands and the same operands to register allocation
@@ -916,10 +916,9 @@ GlobalModel::constrain(const Space& _b) {
           lits << var(ry(p) == b.ry(p).val());
         }
         if (lits.size() > 0) rel(*this, BOT_AND, lits, 0);
+    }
 
-    } else if (diversity_strategy == "difference") {
-        // Do nothing
-    } else if (diversity_strategy == "schedule") {
+    if (diversity_strategy == "schedule") {
 	// ~(a_o ^ c_o)
 	// in words: make sure that the next solution does not have the exact same active operations and issue cycles as the previous one
 	BoolVarArgs lits;

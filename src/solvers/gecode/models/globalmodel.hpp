@@ -198,8 +198,7 @@ public:
   void apply_solution_and_deactivate(GlobalModel * gs,
                                      vector<activation_class> & acs);
    
-  // A futile attempt at something
-  virtual void constrain(const Space& _b);
+  void next(const Space& _b);
 };
 
 #endif
