@@ -136,14 +136,19 @@ solution_distances = [1, 10, 100, 1000]
 #    os.chdir("../..")
 
 # Move everything around
+#from itertools import cycle, islice
 #for function in function_names:
 #    old_path = os.path.join(FUNCTION_DIR, function)
 #    for strat, output in strategies.items():
 #        for dist in solution_distances:
 #            old_dir = os.path.join(old_path, "{}.{}.{}".format(function, output, dist), "exported")
 #            new_dir = os.path.join(PROGRAM_DIR, "program.{}.{}".format(output, dist))
-#            for f in os.listdir(old_dir):
-#                version = f[0:f.index(".unison.mir")]
+#            files = [f for f in os.listdir(old_dir)]
+#            files.sort(key=lambda x: int(x.split(".")[0]))
+#            # Take 1000 elements from the number of files (it should be 1000 files).
+#            # If it's fewer than 1000 files (i.e not enough versions could be generated) then cycle
+#            for i, f in enumerate(islice(cycle(files), 1000)):
+#                version = str(i * dist)
 #                new_path = os.path.join(new_dir, version)
 #                if not os.path.exists(new_path):
 #                    os.makedirs(new_path)
@@ -152,18 +157,18 @@ solution_distances = [1, 10, 100, 1000]
 #                shutil.copyfile(old_name, new_name)
 
 # Find the costs of everything and add it to the place where it belongs
-import json
-for function in function_names:
-    function_base_dir = os.path.join(FUNCTION_DIR)
-    for strat,output in strategies.items():
-        for dist in solution_distances:
-            raw_json_dir = os.path.join(function_base_dir, function, "{}.{}.{}".format(function, output, dist))
-            files = [f for f in os.listdir(raw_json_dir) if os.path.isfile(os.path.join(raw_json_dir, f))] # Get all files from out_json_dir
-
-            for f in files:
-                with open(os.path.join(raw_json_dir, f)) as input_file:
-                    version = int(f) # Make sure it's actually an integer
-                    output_file = os.path.join(PROGRAM_DIR, "program.{}.{}".format(output, dist), str(version), "cost")
-                    cost = json.load(input_file)["cost"][0] # Cost is a list in case multipl goals are specified. We only use one
-                    with open(output_file, "a") as out:
-                        out.write("{}: {}\n".format(function, cost))
+#import json
+#for function in function_names:
+#    function_base_dir = os.path.join(FUNCTION_DIR)
+#    for strat,output in strategies.items():
+#        for dist in solution_distances:
+#            raw_json_dir = os.path.join(function_base_dir, function, "{}.{}.{}".format(function, output, dist))
+#            files = [f for f in os.listdir(raw_json_dir) if os.path.isfile(os.path.join(raw_json_dir, f))] # Get all files from out_json_dir
+#
+#            for f in files:
+#                with open(os.path.join(raw_json_dir, f)) as input_file:
+#                    version = int(f) # Make sure it's actually an integer
+#                    output_file = os.path.join(PROGRAM_DIR, "program.{}.{}".format(output, dist), str(version), "cost")
+#                    cost = json.load(input_file)["cost"][0] # Cost is a list in case multipl goals are specified. We only use one
+#                    with open(output_file, "a") as out:
+#                        out.write("{}: {}\n".format(function, cost))
