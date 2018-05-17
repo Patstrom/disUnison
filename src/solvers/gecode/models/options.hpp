@@ -55,7 +55,7 @@ protected:
   Driver::StringValueOption _lower_bound_file; // Lower bound file
 
   Driver::StringValueOption _diversify; // Diversification strategies
-  Driver::IntOption _solution_distance;
+  Driver::IntOption _sampling_rate;
   Driver::IntOption _num_solutions;
 
 #ifdef GRAPHICS
@@ -146,7 +146,7 @@ public:
   string lower_bound_file(void) const {return _lower_bound_file.value();}
 
   string diversify(void) const {return _diversify.value();}
-  int solution_distance(void) const {return _solution_distance.value();}
+  int sampling_rate(void) const {return _sampling_rate.value();}
   int num_solutions(void) const {return _num_solutions.value();}
 
 #ifdef GRAPHICS

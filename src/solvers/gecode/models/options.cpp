@@ -46,7 +46,7 @@ ModelOptions::ModelOptions(void)
     _lower_bound_file("l", "lower bound file", ""),
 
     _diversify("diversify", "The strategies to apply during the diversification process (as a comma-seperated list)", ""),
-    _solution_distance("solution-distance", "Number of solutions to skip between emitting", 1),
+    _sampling_rate("sampling-rate", "Number of solutions to skip between emitting", 1),
     _num_solutions("num-solutions", "The number of solutions to print (0 means all)", 0),
 
 #ifdef GRAPHICS
@@ -126,7 +126,7 @@ ModelOptions::ModelOptions(void)
   add(_lower_bound_file);
 
   add(_diversify);
-  add(_solution_distance);
+  add(_sampling_rate);
   add(_num_solutions);
 
 #ifdef GRAPHICS

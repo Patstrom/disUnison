@@ -1221,8 +1221,8 @@ int main(int argc, char* argv[]) {
   Support::Timer t_it;
   std::ofstream a_dot_out;
 
-  unsigned int solution_distance = m->options->solution_distance();
-  if (m->options->verbose()) cerr << diversity() << "Solution distance: " << solution_distance << endl;
+  unsigned int sampling_rate = m->options->sampling_rate();
+  if (m->options->verbose()) cerr << diversity() << "Solution distance: " << sampling_rate << endl;
 
   unsigned int buffer_size = 100;
   stack<tuple<int, string>> to_output;
@@ -1233,8 +1233,8 @@ int main(int argc, char* argv[]) {
   int solutions_printed = 0;
   while(GlobalModel* nextm = e.next()) {
     cerr << diversity() << version_number << "\r";
-    // Only save every solution_distance solution
-    if(version_number % solution_distance == 0) {
+    // Only save every sampling_rate solution
+    if(version_number % sampling_rate == 0) {
       ResultData rd(nextm, false, 0, version_number, presolver_time, presolving_time, t_solver.stop(), t_it.stop()); 
       to_output.push(make_tuple(version_number, produce_json(rd, gd, nextm->input->N, 0)));
     }
