@@ -198,7 +198,7 @@ public:
   void apply_solution_and_deactivate(GlobalModel * gs,
                                      vector<activation_class> & acs);
    
-  void next(const Space& _b);
+  void next(const GlobalModel& b);
 };
 
 #endif

@@ -786,19 +786,49 @@ bool GlobalModel::master(const MetaInfo& mi) {
     return true; // default return value for portfolio master (no meaning)
   } else if (mi.type() == MetaInfo::RESTART) {
     if (mi.last() != NULL)
-      constrain(*mi.last());
+      next(static_cast<const GlobalModel&>(*mi.last()));
     mi.nogoods().post(* this);
+    if(options->diversify() == "enumerate") return false;
     return true; // forces a restart even if a solution has been found
   }
   GECODE_NEVER;
 }
+
+void GlobalModel::next(const GlobalModel& b) {
+    string diversity_strategy = options->diversify();
+
+    if (diversity_strategy == "registers") {
+        // ~(x_p ^ ry_p)
+        // in words: make sure that the next solution does not have the same connected operands and the same operands to register allocation
+        BoolVarArgs lits;
+        for (operand p: input->P) {
+	  lits << var(x(p) == b.x(p).val());
+          lits << var(ry(p) == b.ry(p).val());
+        }
+        if (lits.size() > 0) rel(*this, BOT_AND, lits, 0);
+    }
+
+    if (diversity_strategy == "schedule") {
+	// ~(a_o ^ c_o)
+	// in words: make sure that the next solution does not have the exact same active operations and issue cycles as the previous one
+	BoolVarArgs lits;
+	for (operation o: input->O) {
+	  lits << var(a(o) == b.a(o).val());
+	  if(b.a(o).val()) {
+	    lits << var(c(o) == b.c(o).val());
+          }
+	}
+	if (lits.size() > 0) rel(*this, BOT_AND, lits, 0);
+    }
+}
+
 
 bool GlobalModel::slave(const MetaInfo& mi) {
   if (mi.type() == MetaInfo::PORTFOLIO) {
     post_complete_branchers(mi.asset());
     return true; // default return value for portfolio slave (no meaning)
   } else if (mi.type() == MetaInfo::RESTART) {
-    return true; // the search space in the slave space is complete
+    return true;
   }
   GECODE_NEVER;
 }
@@ -901,33 +931,3 @@ apply_solution_and_deactivate(GlobalModel * gs,
   }
 }
 
-void GlobalModel::next(const GlobalModel& b) {
-    string diversity_strategy == options->diversify();
-    if (diversity_strategy == "enumerate") {
-
-    }
-
-    if (diversity_strategy == "registers") {
-        // ~(x_p ^ ry_p)
-        // in words: make sure that the next solution does not have the same connected operands and the same operands to register allocation
-        BoolVarArgs lits;
-        for (operand p: input->P) {
-	  lits << var(x(p) == b.x(p).val());
-          lits << var(ry(p) == b.ry(p).val());
-        }
-        if (lits.size() > 0) rel(*this, BOT_AND, lits, 0);
-    }
-
-    if (diversity_strategy == "schedule") {
-	// ~(a_o ^ c_o)
-	// in words: make sure that the next solution does not have the exact same active operations and issue cycles as the previous one
-	BoolVarArgs lits;
-	for (operation o: input->O) {
-	  lits << var(a(o) == b.a(o).val());
-	  if(b.a(o).val()) {
-	    lits << var(c(o) == b.c(o).val());
-          }
-	}
-	if (lits.size() > 0) rel(*this, BOT_AND, lits, 0);
-    }
-}
