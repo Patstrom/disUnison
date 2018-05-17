@@ -1201,9 +1201,10 @@ int main(int argc, char* argv[]) {
     }
   }
   
-
   // Create the engine
-  BAB<GlobalModel> e(m, ro);
+  Search::Cutoff* _cutoff = Search::Cutoff::constant(100000);
+  ro.cutoff = _cutoff;
+  RBS<GlobalModel, DFS> e(m, ro);
 
   // Create the output directory
   fs::path dir = fs::current_path();
@@ -1231,7 +1232,7 @@ int main(int argc, char* argv[]) {
   int version_number = 0;
   int solutions_printed = 0;
   while(GlobalModel* nextm = e.next()) {
-
+    cerr << diversity() << version_number << "\r";
     // Only save every solution_distance solution
     if(version_number % solution_distance == 0) {
       ResultData rd(nextm, false, 0, version_number, presolver_time, presolving_time, t_solver.stop(), t_it.stop()); 
