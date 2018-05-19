@@ -158,18 +158,39 @@ from itertools import cycle, islice
 
 # Find the costs of everything and add it to the place where it belongs
 import json
-for function in function_names:
-    function_base_dir = os.path.join(FUNCTION_DIR)
-    for strat,output in strategies.items():
-        for dist in solution_distances:
-            raw_json_dir = os.path.join(function_base_dir, function, "{}.{}.{}".format(function, output, dist))
-            files = [f for f in os.listdir(raw_json_dir) if os.path.isfile(os.path.join(raw_json_dir, f))] # Get all files from out_json_dir
-            files.sort(key=int)
+#for function in function_names:
+#    function_base_dir = os.path.join(FUNCTION_DIR)
+#    for strat,output in strategies.items():
+#        for dist in solution_distances:
+#            raw_json_dir = os.path.join(function_base_dir, function, "{}.{}.{}".format(function, output, dist))
+#            files = [f for f in os.listdir(raw_json_dir) if os.path.isfile(os.path.join(raw_json_dir, f))] # Get all files from out_json_dir
+#            files.sort(key=int)
+#
+#            for i, f in enumerate(islice(cycle(files), 1000)):
+#                with open(os.path.join(raw_json_dir, f)) as input_file:
+#                    version = str(i * dist) 
+#                    output_file = os.path.join(PROGRAM_DIR, "program.{}.{}".format(output, dist), version, "cost")
+#                    cost = json.load(input_file)["cost"][0] # Cost is a list in case multiple goals are specified. We only use one
+#                    with open(output_file, "a") as out:
+#                        out.write("{}: {}\n".format(function, cost))
 
-            for i, f in enumerate(islice(cycle(files), 1000)):
-                with open(os.path.join(raw_json_dir, f)) as input_file:
-                    version = str(i * dist) 
-                    output_file = os.path.join(PROGRAM_DIR, "program.{}.{}".format(output, dist), version, "cost")
-                    cost = json.load(input_file)["cost"][0] # Cost is a list in case multiple goals are specified. We only use one
-                    with open(output_file, "a") as out:
-                        out.write("{}: {}\n".format(function, cost))
+# Find the cost of the LLVM solution
+#if not os.path.exists(os.path.join(PROGRAM_DIR, "llvm")):
+#    os.mkdir(os.path.join(PROGRAM_DIR, "llvm"))
+#
+#for function in function_names:
+#    path = os.path.join(FUNCTION_DIR, function, function)
+#    # Generate the file
+#    command = "uni normalize --target=Hexagon {0}.asm.mir -o {0}.llvm.mir".format(path) 
+#    print("Executing command:", command)
+#    subprocess.run(shlex.split(command))
+#
+#    # Analyze it
+#    command = "uni analyze --target=Hexagon {0}.llvm.mir --goals=speed".format(path)
+#    print("Executing command:", command)
+#    completed = subprocess.run(shlex.split(command), stdout=subprocess.PIPE)
+#    data = json.loads( completed.stdout.decode('utf-8') )
+#
+#    output_file = os.path.join(PROGRAM_DIR, "llvm", "cost")
+#    with open(output_file, "a") as out:
+#        out.write("{}: {}\n".format(function, data["speed"]))
