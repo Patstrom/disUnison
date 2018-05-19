@@ -3,13 +3,13 @@ from ubuntu
 RUN apt-get -y update \
 		&& apt-get -y upgrade \
 		&& apt-get -y install haskell-platform libqt4-dev libgraphviz-dev \
-			curl tar make g++ subversion git cmake python autoconf vim
+			curl tar make g++ subversion git cmake python python3 python3-pip autoconf vim
 
 WORKDIR /root
 
 # Install LLVM
 RUN cd /root \
-		&& git clone -b master-unison --single-branch https://github.com/unison-code/llvm.git \
+		&& git clone -b release_38-unison --single-branch https://github.com/unison-code/llvm.git \
 		&& mkdir llvm-build; cd llvm-build \
 		&& cmake /root/llvm \
 		&& cmake --build . \
