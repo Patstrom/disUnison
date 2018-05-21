@@ -158,21 +158,26 @@ from itertools import cycle, islice
 
 # Find the costs of everything and add it to the place where it belongs
 import json
-#for function in function_names:
-#    function_base_dir = os.path.join(FUNCTION_DIR)
-#    for strat,output in strategies.items():
-#        for dist in solution_distances:
-#            raw_json_dir = os.path.join(function_base_dir, function, "{}.{}.{}".format(function, output, dist))
-#            files = [f for f in os.listdir(raw_json_dir) if os.path.isfile(os.path.join(raw_json_dir, f))] # Get all files from out_json_dir
-#            files.sort(key=int)
-#
-#            for i, f in enumerate(islice(cycle(files), 1000)):
-#                with open(os.path.join(raw_json_dir, f)) as input_file:
-#                    version = str(i * dist) 
-#                    output_file = os.path.join(PROGRAM_DIR, "program.{}.{}".format(output, dist), version, "cost")
-#                    cost = json.load(input_file)["cost"][0] # Cost is a list in case multiple goals are specified. We only use one
-#                    with open(output_file, "a") as out:
-#                        out.write("{}: {}\n".format(function, cost))
+for strat, output in strategies.items():
+    for dist in solution_distances:
+        programs = os.path.join(PROGRAM_DIR, "program.{}.{}".format(output, dist))
+        print("Analyzing {} ...".format(programs))
+        for version in os.listdir( programs ):
+            if not os.path.isdir( os.path.join(programs, version) ):
+                continue
+
+            for function in os.listdir( os.path.join(programs, version) ):
+                if function == "cost": # This is the cost file. All others are function name
+                    continue
+
+                command = "uni analyze --target=Hexagon {} --goals=speed".format( os.path.join(programs, version, function) )
+                completed = subprocess.run(shlex.split(command), stdout=subprocess.PIPE)
+                cost = json.loads( completed.stdout.decode('utf-8') )["speed"]
+
+                output_file = os.path.join(programs, version, "cost")
+                key_value = "{}: {}\n".format(function[:function.rfind("-")], cost)
+                with open(output_file, "a") as out:
+                    out.write(key_value)
 
 # Find the cost of the LLVM solution
 #if not os.path.exists(os.path.join(PROGRAM_DIR, "llvm")):
