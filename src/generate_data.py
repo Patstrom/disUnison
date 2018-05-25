@@ -158,26 +158,26 @@ from itertools import cycle, islice
 
 # Find the costs of everything and add it to the place where it belongs
 import json
-for strat, output in strategies.items():
-    for dist in solution_distances:
-        programs = os.path.join(PROGRAM_DIR, "program.{}.{}".format(output, dist))
-        print("Analyzing {} ...".format(programs))
-        for version in os.listdir( programs ):
-            if not os.path.isdir( os.path.join(programs, version) ):
-                continue
-
-            for function in os.listdir( os.path.join(programs, version) ):
-                if function == "cost": # This is the cost file. All others are function name
-                    continue
-
-                command = "uni analyze --target=Hexagon {} --goals=speed".format( os.path.join(programs, version, function) )
-                completed = subprocess.run(shlex.split(command), stdout=subprocess.PIPE)
-                cost = json.loads( completed.stdout.decode('utf-8') )["speed"]
-
-                output_file = os.path.join(programs, version, "cost")
-                key_value = "{}: {}\n".format(function[:function.rfind("-")], cost)
-                with open(output_file, "a") as out:
-                    out.write(key_value)
+#for strat, output in strategies.items():
+#    for dist in solution_distances:
+#        programs = os.path.join(PROGRAM_DIR, "program.{}.{}".format(output, dist))
+#        print("Analyzing {} ...".format(programs))
+#        for version in os.listdir( programs ):
+#            if not os.path.isdir( os.path.join(programs, version) ):
+#                continue
+#
+#            for function in os.listdir( os.path.join(programs, version) ):
+#                if function == "cost": # This is the cost file. All others are function name
+#                    continue
+#
+#                command = "uni analyze --target=Hexagon {} --goals=speed".format( os.path.join(programs, version, function) )
+#                completed = subprocess.run(shlex.split(command), stdout=subprocess.PIPE)
+#                cost = json.loads( completed.stdout.decode('utf-8') )["speed"]
+#
+#                output_file = os.path.join(programs, version, "cost")
+#                key_value = "{}: {}\n".format(function[:function.rfind("-")], cost)
+#                with open(output_file, "a") as out:
+#                    out.write(key_value)
 
 # Find the cost of the LLVM solution
 #if not os.path.exists(os.path.join(PROGRAM_DIR, "llvm")):
@@ -199,3 +199,23 @@ for strat, output in strategies.items():
 #    output_file = os.path.join(PROGRAM_DIR, "llvm", "cost")
 #    with open(output_file, "a") as out:
 #        out.write("{}: {}\n".format(function, data["speed"]))
+
+# Find the execution times
+function_times = {}
+for function in function_names:
+    path = os.path.join(FUNCTION_DIR, function)
+
+    for strat, output in strategies.items():
+        key = "{}--{}".format(function, output)
+        function_times[key] = []
+
+        version_dir = os.path.join(path, "{}.{}.{}".format(function, output, max(solution_distances))) # Only get the times for the maximum sampling rate.
+        files = [f for f in os.listdir(version_dir) if not os.path.isdir(os.path.join(version_dir, f))]
+        for version in files:
+            with open(os.path.join(version_dir, version)) as v:
+               data = json.load(v)
+               function_times[key].append(data["solver_time"])
+        function_times[key].sort() # The versions aren't necessarily read in order.
+
+with open(os.path.join(PROGRAM_DIR, "function_generation_times"), "w") as f:
+    f.write( json.dumps(function_times) )
