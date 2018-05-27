@@ -1,3 +1,14 @@
+# disUnison
+
+This is the modified version of Unison that aims to provide a diverse set of binaries instead of generating an optimal solution. A docker image can be found at patstrom/unison-dev. The modifications have primarily been applied in `src/solvers/gecode/solver.cpp` and `src/solvers/gecode/models/globalmodel.cpp`,
+
+## generate_data.py
+The script generate_data.py generates 1000 different versions for all functions and sampling rates, as well as placing them in a managable directory structure and performing some analysis that requires the Unison tool.
+
+It uses a set of helper scripts such as export_directory and uni_generate.sh.
+
+Before running make sure that src/solvers/gecode/solver.cpp does not have too short of a timeout enabled (which can be the case when testing). Expect an execution time of a couple of days.
+
 # Getting Started with Unison
 
 Unison is a simple, flexible, and potentially optimal software tool that
