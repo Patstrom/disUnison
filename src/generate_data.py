@@ -158,64 +158,73 @@ from itertools import cycle, islice
 
 # Find the costs of everything and add it to the place where it belongs
 import json
-#for strat, output in strategies.items():
-#    for dist in solution_distances:
-#        programs = os.path.join(PROGRAM_DIR, "program.{}.{}".format(output, dist))
-#        print("Analyzing {} ...".format(programs))
-#        for version in os.listdir( programs ):
-#            if not os.path.isdir( os.path.join(programs, version) ):
-#                continue
-#
-#            for function in os.listdir( os.path.join(programs, version) ):
-#                if function == "cost": # This is the cost file. All others are function name
-#                    continue
-#
-#                command = "uni analyze --target=Hexagon {} --goals=speed".format( os.path.join(programs, version, function) )
-#                completed = subprocess.run(shlex.split(command), stdout=subprocess.PIPE)
-#                cost = json.loads( completed.stdout.decode('utf-8') )["speed"]
-#
-#                output_file = os.path.join(programs, version, "cost")
-#                key_value = "{}: {}\n".format(function[:function.rfind("-")], cost)
-#                with open(output_file, "a") as out:
-#                    out.write(key_value)
+for strat, output in strategies.items():
+    for dist in solution_distances:
+        programs = os.path.join(PROGRAM_DIR, "program.{}.{}".format(output, dist))
+        print("Analyzing {} ...".format(programs))
+        for version in os.listdir( programs ):
+            if not os.path.isdir( os.path.join(programs, version) ):
+                continue
+
+            for function in os.listdir( os.path.join(programs, version) ):
+                if "cost" in function: # These are the cost files, all other are functions
+                    continue
+
+                command = "uni analyze --target=Hexagon {} --goals=speed,size".format( os.path.join(programs, version, function) )
+                completed = subprocess.run(shlex.split(command), stdout=subprocess.PIPE)
+                metrics = json.loads( completed.stdout.decode('utf-8') )
+
+                output_file = os.path.join(programs, version, "cost_speed")
+                key_value = "{}: {}\n".format(function[:function.rfind("-")], metrics["speed"])
+                with open(output_file, "a") as out:
+                    out.write(key_value)
+
+                output_file = os.path.join(programs, version, "cost_size")
+                key_value = "{}: {}\n".format(function[:function.rfind("-")], metrics["size"])
+                with open(output_file, "a") as out:
+                    out.write(key_value)
 
 # Find the cost of the LLVM solution
-#if not os.path.exists(os.path.join(PROGRAM_DIR, "llvm")):
-#    os.mkdir(os.path.join(PROGRAM_DIR, "llvm"))
-#
-#for function in function_names:
-#    path = os.path.join(FUNCTION_DIR, function, function)
-#    # Generate the file
-#    command = "uni normalize --target=Hexagon {0}.asm.mir -o {0}.llvm.mir".format(path) 
-#    print("Executing command:", command)
-#    subprocess.run(shlex.split(command))
-#
-#    # Analyze it
-#    command = "uni analyze --target=Hexagon {0}.llvm.mir --goals=speed".format(path)
-#    print("Executing command:", command)
-#    completed = subprocess.run(shlex.split(command), stdout=subprocess.PIPE)
-#    data = json.loads( completed.stdout.decode('utf-8') )
-#
-#    output_file = os.path.join(PROGRAM_DIR, "llvm", "cost")
-#    with open(output_file, "a") as out:
-#        out.write("{}: {}\n".format(function, data["speed"]))
+if not os.path.exists(os.path.join(PROGRAM_DIR, "llvm")):
+    os.mkdir(os.path.join(PROGRAM_DIR, "llvm"))
+
+for function in function_names:
+    path = os.path.join(FUNCTION_DIR, function, function)
+    # Generate the file
+    command = "uni normalize --target=Hexagon {0}.asm.mir -o {0}.llvm.mir".format(path) 
+    print("Executing command:", command)
+    subprocess.run(shlex.split(command))
+
+    # Analyze it
+    command = "uni analyze --target=Hexagon {0}.llvm.mir --goals=speed,size".format(path)
+    print("Executing command:", command)
+    completed = subprocess.run(shlex.split(command), stdout=subprocess.PIPE)
+    data = json.loads( completed.stdout.decode('utf-8') )
+
+    output_file = os.path.join(PROGRAM_DIR, "llvm", "cost_speed")
+    with open(output_file, "a") as out:
+        out.write("{}: {}\n".format(function, data["speed"]))
+
+    output_file = os.path.join(PROGRAM_DIR, "llvm", "cost_size")
+    with open(output_file, "a") as out:
+        out.write("{}: {}\n".format(function, data["size"]))
 
 # Find the execution times
-function_times = {}
-for function in function_names:
-    path = os.path.join(FUNCTION_DIR, function)
-
-    for strat, output in strategies.items():
-        key = "{}--{}".format(function, output)
-        function_times[key] = []
-
-        version_dir = os.path.join(path, "{}.{}.{}".format(function, output, max(solution_distances))) # Only get the times for the maximum sampling rate.
-        files = [f for f in os.listdir(version_dir) if not os.path.isdir(os.path.join(version_dir, f))]
-        for version in files:
-            with open(os.path.join(version_dir, version)) as v:
-               data = json.load(v)
-               function_times[key].append(data["solver_time"])
-        function_times[key].sort() # The versions aren't necessarily read in order.
-
-with open(os.path.join(PROGRAM_DIR, "function_generation_times"), "w") as f:
-    f.write( json.dumps(function_times) )
+#function_times = {}
+#for function in function_names:
+#    path = os.path.join(FUNCTION_DIR, function)
+#
+#    for strat, output in strategies.items():
+#        key = "{}--{}".format(function, output)
+#        function_times[key] = []
+#
+#        version_dir = os.path.join(path, "{}.{}.{}".format(function, output, max(solution_distances))) # Only get the times for the maximum sampling rate.
+#        files = [f for f in os.listdir(version_dir) if not os.path.isdir(os.path.join(version_dir, f))]
+#        for version in files:
+#            with open(os.path.join(version_dir, version)) as v:
+#               data = json.load(v)
+#               function_times[key].append(data["solver_time"])
+#        function_times[key].sort() # The versions aren't necessarily read in order.
+#
+#with open(os.path.join(PROGRAM_DIR, "function_generation_times"), "w") as f:
+#    f.write( json.dumps(function_times) )
